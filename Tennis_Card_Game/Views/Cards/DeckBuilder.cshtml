@@ -1,0 +1,390 @@
+﻿@model Tennis_Card_Game.ViewModel.DeckBuilderVM
+
+@{
+    ViewData["Title"] = "Deck Builder";
+    bool isRestrictedPlayer = Model.Player != null && Model.Player.Id >= 201 && Model.Player.Id <= 232;
+    string readonlyAttr = isRestrictedPlayer ? "readonly" : "";
+    string disabledAttr = isRestrictedPlayer ? "disabled" : "";
+}
+
+<div class="container-fluid">
+    <h2>Deck Builder</h2>
+
+    @if (isRestrictedPlayer)
+    {
+        <div class="alert alert-warning">
+            <strong>Note:</strong> Players must bring their own deck and cannot modify it here.
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Available Cards</h4>
+                    <div class="btn-group" role="group">
+                        @foreach (string category in Model.CardsByCategory.Keys)
+                        {
+                            <button type="button" class="btn btn-outline-primary category-filter" data-category="@category" @(isRestrictedPlayer ? "disabled" : "")>@category</button>
+                        }
+                        <button type="button" class="btn btn-outline-primary category-filter active" data-category="all" @(isRestrictedPlayer ? "disabled" : "")>All</button>
+                    </div>
+                </div>
+                <div class="card-body @(isRestrictedPlayer ? "restricted-content" : "")">
+                    <div class="row">
+                        @foreach (KeyValuePair<string, List<Tennis_Card_Game.Models.Card>> category in Model.CardsByCategory)
+                        {
+                            <div class="card-category-group" id="category-@category.Key">
+                                <h5>@category.Key</h5>
+                                <div class="row">
+                                    @foreach (Tennis_Card_Game.Models.Card card in category.Value)
+                                    {
+                                        <div class="col-md-3 mb-3">
+                                            <div class="card available-card"
+                                                 data-card-id="@card.Id"
+                                                 data-card-name="@card.Name"
+                                                 data-category-name="@card.CardCategory.Name"
+                                                 data-subcategory="@card.CardCategory.SubCategory"
+                                                 data-power="@card.Power"
+                                                 data-precision="@card.Precision"
+                                                 data-energy="@card.EnergyConsumption">
+                                                <div class="card-header">
+                                                    <h6>@card.Name</h6>
+                                                    <span class="badge bg-secondary">@card.CardCategory.SubCategory</span>
+                                                </div>
+                                                <div class="card-body">
+                                                    <p><strong>Power:</strong> @card.Power</p>
+                                                    <p><strong>Precision:</strong> @card.Precision</p>
+                                                    <p><strong>Energy:</strong> @card.EnergyConsumption</p>
+                                                    @if (!string.IsNullOrEmpty(card.SpecialEffect))
+                                                    {
+                                                        <p><strong>Effect:</strong> @card.SpecialEffect</p>
+                                                    }
+                                                    <div class="surface-bonuses">
+                                                        @if (card.ClayBonus != 0)
+                                                        {
+                                                            <span class="badge bg-danger">Clay: @(card.ClayBonus > 0 ? "+" : "")@card.ClayBonus</span>
+                                                        }
+                                                        @if (card.GrassBonus != 0)
+                                                        {
+                                                            <span class="badge bg-success">Grass: @(card.GrassBonus > 0 ? "+" : "")@card.GrassBonus</span>
+                                                        }
+                                                        @if (card.HardCourtBonus != 0)
+                                                        {
+                                                            <span class="badge bg-primary">Hard: @(card.HardCourtBonus > 0 ? "+" : "")@card.HardCourtBonus</span>
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div class="card-footer">
+                                                    <button class="btn btn-sm btn-primary add-to-deck" data-card-id="@card.Id" @(isRestrictedPlayer ? "disabled" : "")>Add to Deck</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Your Deck</h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="SaveDeck" method="post" id="deckForm">
+                        <input type="hidden" asp-for="PlayerId" value="@(Model.Player?.Id)" />
+                        <input type="hidden" id="isRestrictedPlayer" value="@isRestrictedPlayer.ToString().ToLower()" />
+                        <div class="mb-3">
+                            <label asp-for="DeckName" class="form-label">Deck Name</label>
+                            @if (isRestrictedPlayer)
+                            {
+                                <input asp-for="DeckName" class="form-control" value="@(Model.DeckName ?? (Model.Player != null ? $"{Model.Player.Name}'s Deck" : "New Deck"))" readonly />
+                            }
+                            else
+                            {
+                                <input asp-for="DeckName" class="form-control" value="@(Model.DeckName ?? (Model.Player != null ? $"{Model.Player.Name}'s Deck" : "New Deck"))" />
+                            }
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="SelectedSurfaceId" class="form-label">Optimized for Surface</label>
+                            @if (isRestrictedPlayer)
+                            {
+                                <select asp-for="SelectedSurfaceId" class="form-select" disabled>
+                                    <option value="">-- Select Surface --</option>
+                                    @if (Model.Surfaces != null)
+                                    {
+                                        @foreach (Tennis_Card_Game.Models.Surface surface in Model.Surfaces)
+                                        {
+                                            <option value="@surface.Id">@surface.Name</option>
+                                        }
+                                    }
+                                </select>
+                            }
+                            else
+                            {
+                                <select asp-for="SelectedSurfaceId" class="form-select">
+                                    <option value="">-- Select Surface --</option>
+                                    @if (Model.Surfaces != null)
+                                    {
+                                        @foreach (Tennis_Card_Game.Models.Surface surface in Model.Surfaces)
+                                        {
+                                            <option value="@surface.Id">@surface.Name</option>
+                                        }
+                                    }
+                                </select>
+                            }
+                        </div>
+
+                        <div id="current-deck" class="mb-3">
+                            <h5>Cards in Deck (<span id="deck-count">@((Model.CurrentDeckCards?.Count ?? 0))</span>)</h5>
+                            @if (isRestrictedPlayer)
+                            {
+                                <div class="alert alert-info">
+                                    This player must bring their own deck. Deck modification is disabled.
+                                </div>
+                            }
+                            <div id="deck-cards" class="row">
+                                @if (Model.CurrentDeckCards != null)
+                                {
+                                    foreach (Tennis_Card_Game.Models.Card card in Model.CurrentDeckCards)
+                                    {
+                                        <div class="col-md-6 mb-2 deck-card-container"
+                                             data-card-id="@card.Id"
+                                             data-power="@card.Power"
+                                             data-precision="@card.Precision"
+                                             data-energy="@card.EnergyConsumption">
+                                            <div class="card deck-card">
+                                                <div class="card-header d-flex justify-content-between align-items-center">
+                                                    <h6 class="mb-0">@card.Name</h6>
+                                                    @if (isRestrictedPlayer)
+                                                    {
+                                                        <button type="button" class="btn-close remove-from-deck" data-card-id="@card.Id" disabled style="display: none;"></button>
+                                                    }
+                                                    else
+                                                    {
+                                                        <button type="button" class="btn-close remove-from-deck" data-card-id="@card.Id"></button>
+                                                    }
+                                                </div>
+                                                <div class="card-body">
+                                                    <p class="mb-1"><small>@card.CardCategory.Name - @card.CardCategory.SubCategory</small></p>
+                                                    <div class="d-flex justify-content-between">
+                                                        <span>Power: @card.Power</span>
+                                                        <span>Precision: @card.Precision</span>
+                                                        <span>Energy: @card.EnergyConsumption</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <input type="hidden" name="SelectedCardIds" value="@card.Id" />
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        </div>
+
+                        <div class="deck-stats mb-3">
+                            <h5>Deck Statistics</h5>
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="stat-item">
+                                        <span>Avg. Power</span>
+                                        <div id="avg-power" class="stat-value">0</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stat-item">
+                                        <span>Avg. Precision</span>
+                                        <div id="avg-precision" class="stat-value">0</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="stat-item">
+                                        <span>Avg. Energy</span>
+                                        <div id="avg-energy" class="stat-value">0</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success" @(isRestrictedPlayer ? "disabled" : "")>Save Deck</button>
+                        @if (Model.Player != null)
+                        {
+                            <a asp-action="PlayerDetails" asp-controller="Player" asp-route-id="@Model.Player.Id" class="btn btn-secondary">Cancel</a>
+                        }
+                        else
+                        {
+                            <a asp-action="Index" asp-controller="Player" class="btn btn-secondary">Cancel</a>
+                        }
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const isRestrictedPlayer = $('#isRestrictedPlayer').val() === 'true';
+
+            if (isRestrictedPlayer) {
+                $('.add-to-deck, .remove-from-deck').prop('disabled', true);
+
+                // Prevent form submission for restricted players
+                $('#deckForm').submit(function (e) {
+                    if (isRestrictedPlayer) {
+                        e.preventDefault();
+                        alert('Players with ID between 201 and 232 must bring their own deck from home and cannot modify it here.');
+                        return false;
+                    }
+                });
+            }
+
+            $('.category-filter').click(function () {
+                if (isRestrictedPlayer) return;
+
+                $('.category-filter').removeClass('active');
+                $(this).addClass('active');
+
+                const category = $(this).data('category');
+                if (category === 'all') {
+                    $('.card-category-group').show();
+                } else {
+                    $('.card-category-group').hide();
+                    $('#category-' + category).show();
+                }
+            });
+
+            $(document).on('click', '.add-to-deck', function () {
+                if (isRestrictedPlayer) return;
+
+                const cardId = $(this).data('card-id');
+                const cardElement = $(this).closest('.available-card');
+
+                if ($('#deck-cards').find('[data-card-id="' + cardId + '"]').length > 0) {
+                    alert('This card is already in your deck.');
+                    return;
+                }
+
+                const cardName = cardElement.data('card-name');
+                const categoryName = cardElement.data('category-name');
+                const subcategory = cardElement.data('subcategory');
+                const power = cardElement.data('power');
+                const precision = cardElement.data('precision');
+                const energy = cardElement.data('energy');
+
+                const deckCardHtml = `
+                                    <div class="col-md-6 mb-2 deck-card-container"
+                                         data-card-id="${cardId}"
+                                         data-power="${power}"
+                                         data-precision="${precision}"
+                                         data-energy="${energy}">
+                                        <div class="card deck-card">
+                                            <div class="card-header d-flex justify-content-between align-items-center">
+                                                <h6 class="mb-0">${cardName}</h6>
+                                                <button type="button" class="btn-close remove-from-deck" data-card-id="${cardId}"></button>
+                                            </div>
+                                            <div class="card-body">
+                                                <p class="mb-1"><small>${categoryName} - ${subcategory}</small></p>
+                                                <div class="d-flex justify-content-between">
+                                                    <span>Power: ${power}</span>
+                                                    <span>Precision: ${precision}</span>
+                                                    <span>Energy: ${energy}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" name="SelectedCardIds" value="${cardId}" />
+                                    </div>
+                                `;
+
+                $('#deck-cards').append(deckCardHtml);
+                updateDeckStats();
+            });
+
+            $(document).on('click', '.remove-from-deck', function () {
+                if (isRestrictedPlayer) return;
+
+                const cardId = $(this).data('card-id');
+                $('#deck-cards').find('[data-card-id="' + cardId + '"]').remove();
+                updateDeckStats();
+            });
+
+            function updateDeckStats() {
+                const deckCards = $('#deck-cards').find('.deck-card-container');
+                $('#deck-count').text(deckCards.length);
+
+                if (deckCards.length === 0) {
+                    $('#avg-power').text('0');
+                    $('#avg-precision').text('0');
+                    $('#avg-energy').text('0');
+                    return;
+                }
+
+                let totalPower = 0;
+                let totalPrecision = 0;
+                let totalEnergy = 0;
+
+                deckCards.each(function () {
+                    const power = parseFloat($(this).data('power'));
+                    const precision = parseFloat($(this).data('precision'));
+                    const energy = parseFloat($(this).data('energy'));
+
+                    totalPower += power;
+                    totalPrecision += precision;
+                    totalEnergy += energy;
+                });
+
+                $('#avg-power').text((totalPower / deckCards.length).toFixed(1));
+                $('#avg-precision').text((totalPrecision / deckCards.length).toFixed(1));
+                $('#avg-energy').text((totalEnergy / deckCards.length).toFixed(1));
+            }
+
+            updateDeckStats();
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .available-card {
+            height: 100%;
+            transition: transform 0.2s;
+        }
+
+            .available-card:hover {
+                transform: scale(1.03);
+                box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            }
+
+        .deck-card {
+            background-color: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #007bff;
+        }
+
+        .surface-bonuses {
+            margin-top: 8px;
+        }
+
+        .restricted-content {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+    </style>
+}

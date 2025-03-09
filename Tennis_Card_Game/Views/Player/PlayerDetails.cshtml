@@ -1,0 +1,481 @@
+﻿@model PlayerDetailsViewModel
+@{
+    ViewData["Title"] = $"{Model.Player.Name} - Player Details";
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow rounded-lg player-header-card">
+                <div class="card-body text-white">
+                    <div class="row align-items-center">
+                        <div class="col-md-2 text-center">
+                            <div class="player-avatar bg-white text-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3">
+                                @Model.Player.Name.Substring(0, 1)
+                            </div>
+                            <div class="level-badge mt-2 d-inline-block rounded-circle bg-warning text-dark fw-bold d-flex align-items-center justify-content-center">
+                                @Model.Player.Level
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h1 class="display-4 fw-bold">@Model.Player.Name</h1>
+                            <div class="d-flex align-items-center mb-2">
+                                <span class="badge bg-light text-dark px-3 py-2 me-2">@Model.Player.PlayingStyle.Name Style</span>
+                                <span class="badge bg-success px-3 py-2">@Model.Player.SpecialAbility.Name</span>
+                                <span class="badge bg-info ms-2 px-3 py-2">@Model.WinLossRecord Record</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex justify-content-end">
+                                <div class="stats-card text-center px-3 py-2 rounded me-3">
+                                    <h3 class="mb-0">@Model.Wins</h3>
+                                    <small>Wins</small>
+                                </div>
+                                <div class="stats-card text-center px-3 py-2 rounded me-3">
+                                    <h3 class="mb-0">@Model.Losses</h3>
+                                    <small>Losses</small>
+                                </div>
+                                <div class="stats-card text-center px-3 py-2 rounded">
+                                    <h3 class="mb-0">@Model.WinPercentage.ToString("F1")%</h3>
+                                    <small>Win Rate</small>
+                                </div>
+                            </div>
+                            <div class="energy-container mt-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <h6 class="mb-0">Energy</h6>
+                                    <span>@Model.EnergyStatus</span>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-warning"
+                                         role="progressbar" style="width: @($"{(double)Model.Player.CurrentEnergy / Model.Player.MaxEnergy * 100}%");">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-2">
+                                <span class="badge rounded-pill @(Model.Player.Momentum == "InForm" ? "bg-success" : Model.Player.Momentum == "UnderPressure" ? "bg-danger" : "bg-secondary")">
+                                    Momentum: @Model.Player.Momentum
+                                </span>
+                                <span class="badge rounded-pill @(Model.Player.SpecialAbilityUsed ? "bg-secondary" : "bg-primary")">
+                                    Special Ability: @(Model.Player.SpecialAbilityUsed ? "Used" : "Available")
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-gradient-primary text-white d-flex justify-content-between align-items-center">
+                    <h3 class="m-0">Player Cards (@Model.ActiveCardCount)</h3>
+                    <a href="@Url.Action("DeckBuilder", "Cards", new { id = Model.Player.Id })" class="btn btn-sm btn-light">Manage Deck</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="card-deck-container p-3">
+                        <div class="row g-3">
+                            @foreach (var playerCard in Model.PlayerCards)
+                            {
+                                Card card = playerCard.Card;
+                                string categoryClass = card.CardCategory.Name.ToLower() switch
+                                {
+                                    "shot" => "bg-danger",
+                                    "positioning" => "bg-success",
+                                    "strategy" => "bg-info",
+                                    _ => "bg-primary"
+                                };
+
+                                <div class="col-lg-3 col-md-4 col-sm-6">
+                                    <div class="tennis-card shadow-sm @(playerCard.InHand ? "border-3 border-warning" : "")"
+                                         onclick="flipCard(this)">
+                                        <div class="card-inner position-relative w-100 h-100">
+                                            <div class="card-front position-absolute w-100 h-100 rounded">
+                                                <div class="@categoryClass text-white p-2 rounded-top">
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <h5 class="m-0">@card.Name</h5>
+                                                        <span class="badge bg-white text-dark">@card.CardCategory.SubCategory</span>
+                                                    </div>
+                                                </div>
+                                                <div class="p-3 text-center card-description">
+                                                    <div class="card-icon rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto mb-3">
+                                                        <i class="fa fa-trophy fa-2x text-primary"></i>
+                                                    </div>
+                                                    <p class="small mb-2 card-desc-text">@(string.IsNullOrEmpty(card.Description) ? "No description available." : card.Description)</p>
+                                                </div>
+                                                <div class="card-stats p-2 border-top mt-auto">
+                                                    <div class="row text-center g-0">
+                                                        <div class="col-4 border-end">
+                                                            <div class="stat-value">@card.Power</div>
+                                                            <div class="stat-label small">Power</div>
+                                                        </div>
+                                                        <div class="col-4 border-end">
+                                                            <div class="stat-value">@card.Precision</div>
+                                                            <div class="stat-label small">Precision</div>
+                                                        </div>
+                                                        <div class="col-4">
+                                                            <div class="stat-value">@card.EnergyConsumption</div>
+                                                            <div class="stat-label small">Energy</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                @if (!string.IsNullOrEmpty(card.SpecialEffect))
+                                                {
+                                                    <div class="special-effect px-2 py-1 bg-light text-center border-top">
+                                                        <small><strong>Effect:</strong> @card.SpecialEffect</small>
+                                                    </div>
+                                                }
+                                            </div>
+                                            <div class="card-back position-absolute w-100 h-100 rounded">
+                                                <div class="h-100 d-flex align-items-center justify-content-center">
+                                                    <h2 class="text-white text-center">Tennis Card Battle</h2>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            @if (!Model.PlayerCards.Any())
+                            {
+                                <div class="col-12 text-center py-5">
+                                    <p class="text-muted mb-3">No cards in deck</p>
+                                    <a href="@Url.Action("DeckBuilder", "Cards", new { id = Model.Player.Id })" class="btn btn-outline-primary">Add Cards</a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header bg-gradient-success text-white">
+                    <h3 class="m-0">Recommended Cards</h3>
+                </div>
+                <div class="card-body p-0">
+                    <div class="card-deck-container p-3">
+                        <div class="row g-3">
+                            @foreach (Card card in Model.RecommendedCards)
+                            {
+                                string categoryClass = card.CardCategory.Name.ToLower() switch
+                                {
+                                    "shot" => "bg-danger",
+                                    "positioning" => "bg-success",
+                                    "strategy" => "bg-info",
+                                    _ => "bg-primary"
+                                };
+
+                                <div class="col-lg-3 col-md-6">
+                                    <div class="tennis-card recommended shadow">
+                                        <div class="@categoryClass text-white p-2 rounded-top">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <h5 class="m-0">@card.Name</h5>
+                                                <span class="badge bg-white text-dark">@card.CardCategory.SubCategory</span>
+                                            </div>
+                                        </div>
+                                        <div class="p-2 text-center">
+                                            <p class="small mb-2 recommended-desc">@(string.IsNullOrEmpty(card.Description) ? "No description available." : card.Description)</p>
+                                        </div>
+                                        <div class="card-stats p-2 border-top">
+                                            <div class="row text-center g-0">
+                                                <div class="col-4 border-end">
+                                                    <div class="stat-value">@card.Power</div>
+                                                    <div class="stat-label small">Power</div>
+                                                </div>
+                                                <div class="col-4 border-end">
+                                                    <div class="stat-value">@card.Precision</div>
+                                                    <div class="stat-label small">Precision</div>
+                                                </div>
+                                                <div class="col-4">
+                                                    <div class="stat-value">@card.EnergyConsumption</div>
+                                                    <div class="stat-label small">Energy</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="p-2 text-center">
+                                            <a href="@Url.Action("DeckBuilder", "Cards", new { id = Model.Player.Id })" class="btn btn-sm btn-outline-primary">Add to Deck</a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            @if (!Model.RecommendedCards.Any())
+                            {
+                                <div class="col-12 text-center py-4">
+                                    <p class="text-muted">No recommended cards available</p>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card shadow mb-4">
+                <div class="card-header bg-gradient-info text-white">
+                    <h3 class="m-0">Recent Matches</h3>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        @foreach (Match match in Model.RecentMatches)
+                        {
+                            bool isPlayer1 = match.Player1Id == Model.Player.Id;
+                            bool isWinner = match.IsCompleted && match.WinnerId == Model.Player.Id;
+                            Player opponent = isPlayer1 ? match.Player2 : match.Player1;
+
+                            <div class="list-group-item @(isWinner ? "list-group-item-success" : match.IsCompleted ? "list-group-item-danger" : "list-group-item-warning")">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h5 class="mb-1">
+                                            @(isPlayer1 ? Model.Player.Name : opponent.Name) vs @(isPlayer1 ? opponent.Name : Model.Player.Name)
+                                        </h5>
+                                        <p class="mb-1 small">
+                                            <span class="text-muted">Surface:</span> @match.Surface.Name
+                                            @if (match.Tournament != null)
+                                            {
+                                                <span class="ms-2 text-muted">Tournament:</span> @match.Tournament.Name
+                                            }
+                                        </p>
+                                        <p class="mb-0 small text-muted">@match.StartTime.ToString("MMM dd, yyyy")</p>
+                                    </div>
+                                    <div class="text-center">
+                                        <div class="match-score fw-bold">@match.Player1Sets - @match.Player2Sets</div>
+                                        <span class="badge @(isWinner ? "bg-success" : match.IsCompleted ? "bg-danger" : "bg-warning")">
+                                            @(match.IsCompleted ? (isWinner ? "Won" : "Lost") : "In Progress")
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                        @if (!Model.RecentMatches.Any())
+                        {
+                            <div class="text-center py-4">
+                                <p class="text-muted">No recent matches</p>
+                                <a href="#" class="btn btn-outline-primary">Play a Match</a>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="#" class="btn btn-outline-primary">View All Matches</a>
+                </div>
+            </div>
+
+            <div class="card shadow mb-4">
+                <div class="card-header bg-gradient-dark text-white">
+                    <h3 class="m-0">Playing Style</h3>
+                </div>
+                <div class="card-body">
+                    <h4 class="card-title">@Model.Player.PlayingStyle.Name</h4>
+                    <p>@(string.IsNullOrEmpty(Model.Player.PlayingStyle.Description) ? "No description available." : Model.Player.PlayingStyle.Description)</p>
+
+                    <div class="row mt-3">
+                        <div class="col-4 text-center">
+                            <div class="stat-circle bg-danger text-white rounded-circle d-flex align-items-center justify-content-center mx-auto">
+                                @Model.Player.PlayingStyle.OffensiveBonus
+                            </div>
+                            <div class="mt-2 small">Offensive</div>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="stat-circle bg-info text-white rounded-circle d-flex align-items-center justify-content-center mx-auto">
+                                @Model.Player.PlayingStyle.DefensiveBonus
+                            </div>
+                            <div class="mt-2 small">Defensive</div>
+                        </div>
+                        <div class="col-4 text-center">
+                            <div class="stat-circle bg-success text-white rounded-circle d-flex align-items-center justify-content-center mx-auto">
+                                @Model.Player.PlayingStyle.EnergyEfficiency
+                            </div>
+                            <div class="mt-2 small">Energy</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header bg-gradient-purple text-white">
+                    <h3 class="m-0">Special Ability</h3>
+                </div>
+                <div class="card-body">
+                    <h4 class="card-title">@Model.Player.SpecialAbility.Name</h4>
+                    <p>@(string.IsNullOrEmpty(Model.Player.SpecialAbility.Description) ? "No description available." : Model.Player.SpecialAbility.Description)</p>
+
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div>
+                            <div class="small text-muted">Effect:</div>
+                            <div class="fw-bold">@Model.Player.SpecialAbility.Effect</div>
+                        </div>
+                        <div>
+                            <div class="small text-muted">Value:</div>
+                            <div class="fw-bold">@Model.Player.SpecialAbility.EffectValue</div>
+                        </div>
+                        <div>
+                            <div class="small text-muted">Status:</div>
+                            <div class="fw-bold @(Model.Player.SpecialAbilityUsed ? "text-muted" : "text-success")">
+                                @(Model.Player.SpecialAbilityUsed ? "Used" : "Available")
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .player-header-card {
+        background: linear-gradient(to right, #1e5799, #2989d8, #7db9e8);
+    }
+
+    .player-avatar {
+        width: 100px;
+        height: 100px;
+        font-size: 48px;
+        border: 3px solid gold;
+    }
+
+    .level-badge {
+        width: 36px;
+        height: 36px;
+        border: 2px solid white;
+    }
+
+    .stats-card {
+        background-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .tennis-card {
+        transition: transform 0.3s;
+        border-radius: 8px;
+        background-color: white;
+        height: 380px;
+        perspective: 1000px;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+    }
+
+        .tennis-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2) !important;
+        }
+
+    .card-icon {
+        width: 60px;
+        height: 60px;
+        border: 1px solid #ddd;
+        flex-shrink: 0;
+    }
+
+    .card-inner {
+        transition: transform 0.6s;
+        transform-style: preserve-3d;
+        height: 100%;
+    }
+
+    .card-front {
+        backface-visibility: hidden;
+        background: linear-gradient(135deg, #fff, #f8f9fa);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-back {
+        backface-visibility: hidden;
+        transform: rotateY(180deg);
+        background-image: url('/images/card-back.png');
+        background-position: center;
+        background-size: cover;
+    }
+
+    .card-description {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        overflow: hidden;
+    }
+
+    .card-desc-text {
+        overflow-y: auto;
+        max-height: 100px;
+        margin-bottom: auto;
+    }
+
+    .stat-value {
+        font-weight: bold;
+        font-size: 1.2rem;
+    }
+
+    .recommended {
+        position: relative;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        height: 300px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .recommended-desc {
+        overflow-y: auto;
+        max-height: 60px;
+    }
+
+    .recommended::after {
+        content: "Recommended";
+        position: absolute;
+        top: 10px;
+        right: -30px;
+        background: #ffc107;
+        color: #000;
+        padding: 2px 30px;
+        font-size: 10px;
+        transform: rotate(45deg);
+        z-index: 1;
+    }
+
+    .stat-circle {
+        width: 60px;
+        height: 60px;
+    }
+
+    .bg-gradient-primary {
+        background: linear-gradient(to right, #4e73df, #224abe);
+    }
+
+    .bg-gradient-success {
+        background: linear-gradient(to right, #1cc88a, #13855c);
+    }
+
+    .bg-gradient-info {
+        background: linear-gradient(to right, #36b9cc, #258391);
+    }
+
+    .bg-gradient-dark {
+        background: linear-gradient(to right, #5a5c69, #373840);
+    }
+
+    .bg-gradient-purple {
+        background: linear-gradient(to right, #9061f9, #6610f2);
+    }
+
+    .tennis-card .card-inner.flipped {
+        transform: rotateY(180deg);
+    }
+
+    .card-stats {
+        margin-top: auto;
+    }
+
+    .special-effect {
+        font-size: 0.85rem;
+        word-wrap: break-word;
+    }
+</style>
+
+<script>
+    function flipCard(element) {
+        const cardInner = element.querySelector('.card-inner');
+        cardInner.classList.toggle('flipped');
+    }
+</script>

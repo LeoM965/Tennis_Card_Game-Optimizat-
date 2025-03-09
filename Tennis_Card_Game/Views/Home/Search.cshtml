@@ -1,0 +1,101 @@
+﻿@model Tennis_Card_Game.ViewModel.SearchViewModel
+@{
+    ViewData["Title"] = "Search Results";
+}
+
+<div class="container">
+    <h2>Search Results for "@Model.Query"</h2>
+
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link @(Model.SearchType == "all" ? "active" : "")"
+               href="@Url.Action("Search", "Home", new { query = Model.Query, type = "all" })">All</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(Model.SearchType == "cards" ? "active" : "")"
+               href="@Url.Action("Search", "Home", new { query = Model.Query, type = "cards" })">Cards</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(Model.SearchType == "players" ? "active" : "")"
+               href="@Url.Action("Search", "Home", new { query = Model.Query, type = "players" })">Players</a>
+        </li>
+    </ul>
+
+    @if (Model.SearchType == "all" || Model.SearchType == "cards")
+    {
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h4>Cards</h4>
+            </div>
+            <div class="card-body">
+                @if (Model.Cards.Any())
+                {
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
+                        @foreach (Card card in Model.Cards)
+                        {
+                            <div class="col">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">@card.Name</h5>
+                                        <a href="@Url.Action("Details", "Cards", new { id = card.Id })" class="btn btn-sm btn-primary">View Details</a>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p>No cards found matching your search.</p>
+                }
+            </div>
+        </div>
+    }
+
+    @if (Model.SearchType == "all" || Model.SearchType == "players")
+    {
+        <div class="card">
+            <div class="card-header bg-success text-white">
+                <h4>Players</h4>
+            </div>
+            <div class="card-body">
+                @if (Model.Players.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Level</th>
+                                    <th>Playing Style</th>
+                                    <th>Special Ability</th>
+                                    <th>Energy</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (Player player in Model.Players)
+                                {
+                                    <tr>
+                                        <td>@player.Name</td>
+                                        <td>@player.Level</td>
+                                        <td>@player.PlayingStyle.Name</td>
+                                        <td>@player.SpecialAbility.Name</td>
+                                        <td>@player.CurrentEnergy / @player.MaxEnergy</td>
+                                        <td>
+                                            <a href="@Url.Action("PlayerDetails", "Player", new { id = player.Id })" class="btn btn-sm btn-success">View Profile</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p>No players found matching your search.</p>
+                }
+            </div>
+        </div>
+    }
+</div>

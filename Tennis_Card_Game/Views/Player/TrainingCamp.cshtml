@@ -1,0 +1,268 @@
+﻿@model TrainingCampViewModel
+
+<div class="container training-camp">
+    <div class="training-header">
+        <h2>Training Camp: @Model.Player.Name</h2>
+
+        <div class="player-stats">
+            <div class="stat-card">
+                <span class="stat-label">Level</span>
+                <span class="stat-value">@Model.Player.Level</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">XP</span>
+                <span class="stat-value">@Model.Player.Experience</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-label">Energy</span>
+                <span class="stat-value">@Model.Player.CurrentEnergy / @Model.Player.MaxEnergy</span>
+            </div>
+        </div>
+    </div>
+
+    @if (Model.Player.Id >= 66 && Model.Player.Id <= 97)
+    {
+        <div class="restricted-access">
+            <div class="alert alert-warning">
+                <h3>Training Access Restricted</h3>
+                <p>Training modules are currently unavailable for this account.</p>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="training-modules">
+            <h3>Available Training Modules</h3>
+
+            <form asp-action="PerformTraining" method="post">
+                <input type="hidden" name="playerId" value="@Model.Player.Id" />
+
+                <div class="module-grid">
+                    @foreach (TrainingModule module in Model.AvailableTrainingModules)
+                    {
+                        double playingStyleBonus = Model.Player.PlayingStyle.Name switch
+                        {
+                            "Aggressive Baseliner" => 0.2,
+                            "Serve and Volleyer" => 0.15,
+                            "Defensive Baseliner" => 0.1,
+                            "Counter-Puncher" => 0.25,
+                            "Big Server" => 0.18,
+                            _ => 0.12
+                        };
+
+                        double specialAbilityBonus = Model.Player.SpecialAbility != null
+                        ? Model.Player.SpecialAbility.Name switch
+                        {
+                            "Second Wind" => 0.1,
+                            "Focus Mode" => 0.15,
+                            "Power Surge" => 0.2,
+                            "Card Draw" => 0.12,
+                            _ => 0.05
+                        }
+                        : 0.05;
+
+                        double totalBonus = playingStyleBonus + specialAbilityBonus;
+                        int bonusMultiplier = (int)(totalBonus * 100);
+                        int totalXp = (int)(module.ExperienceReward * (1 + totalBonus));
+
+                        <div class="training-module @(Model.Player.CurrentEnergy >= module.EnergyRequired ? "module-active" : "module-locked")">
+                            <div class="module-header">
+                                <h4>@module.Name</h4>
+                            </div>
+
+                            <div class="module-content">
+                                <p class="module-description">@module.Description</p>
+
+                                <div class="module-stats">
+                                    <div class="stat-item">
+                                        <span class="icon">⚡</span>
+                                        <span>Energy: @module.EnergyRequired</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="icon">🏆</span>
+                                        <span>Base XP: @module.ExperienceReward</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="icon">📈</span>
+                                        <span>XP Bonus: +@bonusMultiplier%</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span class="icon">🌟</span>
+                                        <span>Total XP: @totalXp</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="module-actions">
+                                <button type="submit"
+                                        name="trainingModuleName"
+                                        value="@module.Name"
+                                        class="btn @(Model.Player.CurrentEnergy >= module.EnergyRequired ? "btn-primary" : "btn-disabled")"
+                                @(Model.Player.CurrentEnergy >= module.EnergyRequired ? "" : "disabled")>
+                                    @(Model.Player.CurrentEnergy >= module.EnergyRequired ? "Train" : "Insufficient Energy")
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </form>
+        </div>
+    }
+</div>
+
+<style>
+    .training-camp {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f4f4f4;
+        border-radius: 10px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+    }
+
+    .training-header {
+        background-color: #2c3e50;
+        color: white;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+    }
+
+    .player-stats {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 15px;
+    }
+
+    .stat-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        background-color: rgba(255,255,255,0.2);
+        padding: 10px;
+        border-radius: 6px;
+        min-width: 100px;
+    }
+
+    .stat-label {
+        font-size: 0.8em;
+        opacity: 0.7;
+        text-transform: uppercase;
+    }
+
+    .stat-value {
+        font-weight: bold;
+        font-size: 1.2em;
+    }
+
+    .restricted-access {
+        background-color: #e74c3c;
+        color: white;
+        padding: 20px;
+        border-radius: 8px;
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .alert-warning {
+        background-color: #c0392b;
+        color: white;
+        padding: 15px;
+        border-radius: 6px;
+    }
+
+        .alert-warning h3 {
+            margin-bottom: 10px;
+            color: white;
+        }
+
+    .module-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+
+    .training-module {
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+        .training-module:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+    .module-header {
+        background-color: #3498db;
+        color: white;
+        padding: 10px;
+        text-align: center;
+    }
+
+    .module-content {
+        padding: 15px;
+    }
+
+    .module-description {
+        color: #666;
+        margin-bottom: 15px;
+        min-height: 50px;
+    }
+
+    .module-stats {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        gap: 10px;
+    }
+
+    .stat-item {
+        display: flex;
+        align-items: center;
+        flex-basis: calc(50% - 10px);
+    }
+
+        .stat-item .icon {
+            margin-right: 5px;
+        }
+
+    .module-actions {
+        padding: 10px;
+        text-align: center;
+        border-top: 1px solid #ecf0f1;
+    }
+
+    .btn-primary {
+        background-color: #2ecc71;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease, transform 0.2s ease;
+    }
+
+        .btn-primary:hover {
+            background-color: #27ae60;
+            transform: scale(1.05);
+        }
+
+    .btn-disabled {
+        background-color: #95a5a6;
+        color: #bdc3c7;
+        cursor: not-allowed;
+    }
+
+    .module-active {
+        border: 2px solid #2ecc71;
+    }
+
+    .module-locked {
+        opacity: 0.7;
+        border: 2px solid #95a5a6;
+    }
+</style>

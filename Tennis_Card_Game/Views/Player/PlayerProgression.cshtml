@@ -1,0 +1,251 @@
+﻿@model PlayerProgressionViewModel
+
+<div class="player-progression-container">
+    <div class="player-header">
+        <h1>@Model.Player.Name - Player Progression</h1>
+
+        @if (Model.Player.Id >= 66 && Model.Player.Id <= 97)
+        {
+            <div class="restricted-access">
+                <div class="alert alert-warning">
+                    <h3>Progression Access Restricted</h3>
+                    <p>Player progression details are currently unavailable for this account.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="player-level-info">
+                <h2>Level @Model.Player.Level</h2>
+
+                <div class="xp-progress-container">
+                    <div class="xp-progress-bar">
+                        <div class="xp-progress" style="width: @(Math.Round(Model.LevelProgressPercentage, 2))%"></div>
+                    </div>
+                    <div class="xp-progress-text">
+                        @(Model.CurrentLevelXpRequirement - Model.XpToNextLevel) / @Model.CurrentLevelXpRequirement XP
+                        (Progress: @(Math.Round(Model.LevelProgressPercentage, 2))%)
+                    </div>
+                </div>
+
+                <div class="player-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Current Energy:</span>
+                        <span class="stat-value">@Model.Player.CurrentEnergy / @Model.Player.MaxEnergy</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Playing Style:</span>
+                        <span class="stat-value">@Model.Player.PlayingStyle.Name</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Special Ability:</span>
+                        <span class="stat-value">@Model.Player.SpecialAbility.Name</span>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    @if (Model.Player.Id > 32)
+    {
+        <div class="progression-details">
+            <div class="skill-upgrades">
+                <h3>Skill Upgrades</h3>
+                <p>Available Skill Points: @Model.AvailableSkillPoints</p>
+                <p>Upgrade Cost: @Model.SkillUpgradeCost Experience Points</p>
+
+                <div class="upgrade-section">
+                    <h4>Playing Style</h4>
+                    <p>Current: @Model.Player.PlayingStyle.Name</p>
+
+                    <form method="post" action="/PlayerProgression/UpgradePlayerSkill">
+                        <input type="hidden" name="playerId" value="@Model.Player.Id" />
+                        <input type="hidden" name="upgradeType" value="PlayingStyle" />
+
+                        <select name="upgradeId" required>
+                            <option value="">Select New Playing Style</option>
+                            @foreach (PlayingStyle style in Model.PossiblePlayingStyles)
+                            {
+                                <option value="@style.Id">@style.Name</option>
+                            }
+                        </select>
+
+                        <button type="submit" class="btn btn-primary">Change Playing Style</button>
+                    </form>
+                </div>
+
+                <div class="upgrade-section">
+                    <h4>Special Ability</h4>
+                    <p>Current: @Model.Player.SpecialAbility.Name</p>
+
+                    <form method="post" action="/PlayerProgression/UpgradePlayerSkill">
+                        <input type="hidden" name="playerId" value="@Model.Player.Id" />
+                        <input type="hidden" name="upgradeType" value="SpecialAbility" />
+
+                        <select name="upgradeId" required>
+                            <option value="">Select New Special Ability</option>
+                            @foreach (SpecialAbility ability in Model.PossibleSpecialAbilities)
+                            {
+                                <option value="@ability.Id">@ability.Name</option>
+                            }
+                        </select>
+
+                        <button type="submit" class="btn btn-primary">Change Special Ability</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="recommended-training">
+                <h3>Recommended Training Modules</h3>
+
+                <div class="training-modules">
+                    @foreach (TrainingModule module in Model.RecommendedTrainingModules)
+                    {
+                        <div class="training-module">
+                            <h4>@module.Name</h4>
+                            <p>@module.Description</p>
+                            <div class="module-details">
+                                <span class="xp-reward">XP Reward: @module.ExperienceReward</span>
+                                <span class="energy-cost">Energy Required: @module.EnergyRequired</span>
+                            </div>
+                            <a asp-controller="Player" asp-action="TrainingCamp" asp-route-id="@Model.Player.Id" class="btn btn-secondary training-btn">Go to Training Camp</a>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .player-progression-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f8f9fa;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    .player-header {
+        text-align: center;
+        margin-bottom: 25px;
+    }
+
+    .xp-progress-container {
+        margin-top: 15px;
+    }
+
+    .xp-progress-bar {
+        width: 100%;
+        height: 25px;
+        background-color: #e9ecef;
+        border-radius: 12px;
+        overflow: hidden;
+        position: relative;
+    }
+
+    .xp-progress {
+        height: 100%;
+        background-color: #28a745;
+        transition: width 0.5s ease;
+    }
+
+    .xp-progress-text {
+        text-align: center;
+        margin-top: 10px;
+        color: #6c757d;
+    }
+
+    .player-stats {
+        display: flex;
+        justify-content: space-around;
+        margin-top: 15px;
+        background-color: #ffffff;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .stat-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .stat-label {
+        color: #6c757d;
+        font-size: 0.9em;
+        margin-bottom: 5px;
+    }
+
+    .stat-value {
+        font-weight: bold;
+        color: #343a40;
+    }
+
+    .progression-details {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 25px;
+    }
+
+    .skill-upgrades, .recommended-training {
+        width: 48%;
+        background-color: #ffffff;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+    }
+
+    .upgrade-section, .training-module {
+        background-color: #f1f3f5;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+    }
+
+    .training-module .module-details {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        color: #6c757d;
+    }
+
+    .btn {
+        width: 100%;
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 6px;
+    }
+
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+        border: none;
+    }
+
+    .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+        border: none;
+    }
+
+    .btn:hover {
+        opacity: 0.9;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const upgradeSelects = document.querySelectorAll('select');
+        upgradeSelects.forEach(select => {
+            const submitButton = select.nextElementSibling;
+            submitButton.disabled = select.value === '';
+
+            select.addEventListener('change', function () {
+                submitButton.disabled = this.value === '';
+            });
+        });
+    });
+</script>

@@ -1,0 +1,59 @@
+﻿@model IEnumerable<Tennis_Card_Game.Models.Match>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>All Matches</title>
+    <style>
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        th { background-color: #4CAF50; color: white; }
+        a { text-decoration: none; color: #0066cc; }
+        a:hover { text-decoration: underline; }
+        .container { width: 90%; margin: 0 auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>All Matches</h1>
+        <p>
+            <a href="/Matches/LiveMatches">View Live Matches</a> |
+            <a href="/Matches/UpcomingMatches">View Upcoming Matches</a> |
+            <a href="/Matches/CompletedMatches">View Completed Matches</a>
+        </p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Tournament</th>
+                    <th>Player 1</th>
+                    <th>Player 2</th>
+                    <th>Surface</th>
+                    <th>Start Time</th>
+                    <th>Status</th>
+                    <th>Score</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var match in Model)
+                {
+                    <tr>
+                        <td>@(match.Tournament?.Name ?? "Exhibition Match")</td>
+                        <td>@match.Player1.Name</td>
+                        <td>@match.Player2.Name</td>
+                        <td>@match.Surface.Name</td>
+                        <td>@match.StartTime.ToString("yyyy-MM-dd HH:mm")</td>
+                        <td>@(match.IsCompleted ? "Completed" : "In Progress")</td>
+                        <td>@match.Player1Sets - @match.Player2Sets</td>
+                        <td>
+                            <a href="/Matches/Details/@match.Id">Details</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

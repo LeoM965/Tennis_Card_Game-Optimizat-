@@ -1,0 +1,433 @@
+﻿@model Tennis_Card_Game.ViewModel.BrowseCardsVM
+
+@{
+    ViewData["Title"] = "Browse Tennis Cards";
+}
+
+<style>
+    .card-container {
+        margin-top: 1.5rem;
+    }
+
+    .main-title {
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-card {
+        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+        margin-bottom: 1.5rem;
+    }
+
+    .filter-header {
+        background-color: #198754;
+        color: white;
+    }
+
+    .stat-header {
+        background-color: #0dcaf0;
+        color: white;
+    }
+
+    .header-title {
+        margin-bottom: 0;
+    }
+
+    .filter-group {
+        margin-bottom: 1rem;
+    }
+
+    .stats-container {
+        margin-top: 1rem;
+    }
+
+    .stat-label {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .progress-container {
+        height: 20px;
+        flex-grow: 1;
+        margin-left: 0.5rem;
+        margin-right: 0.5rem;
+    }
+
+    .power-bar {
+        background-color: #dc3545;
+    }
+
+    .precision-bar {
+        background-color: #0d6efd;
+    }
+
+    .energy-bar {
+        background-color: #198754;
+    }
+
+    .special-effect {
+        margin-top: 1rem;
+    }
+
+    .special-effect-title {
+        color: #dc3545;
+    }
+
+    .surface-bonuses {
+        margin-top: 1rem;
+    }
+
+    .surface-badges {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .clay-badge {
+        background-color: #dc3545;
+    }
+
+    .grass-badge {
+        background-color: #198754;
+    }
+
+    .hard-badge {
+        background-color: #0d6efd;
+    }
+
+    .card-actions {
+        text-align: center;
+    }
+
+    .card-shadow {
+        box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.075);
+    }
+
+    .wild-card-border {
+        border-color: #ffc107;
+    }
+
+    .wild-card-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        padding: 0.5rem;
+    }
+
+    .warning-badge {
+        background-color: #ffc107;
+    }
+
+    .grid-view {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1.5rem;
+    }
+
+    .list-view {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .flex-row-card {
+        display: flex;
+        flex-direction: row;
+    }
+
+    .view-details-btn {
+        width: 100%;
+    }
+</style>
+
+<div class="container card-container">
+    <h1 class="main-title">Tennis Card Collection</h1>
+
+    <div class="row">
+        <div class="col-md-3">
+            <div class="card filter-card">
+                <div class="card-header filter-header">
+                    <h5 class="header-title">Card Filters</h5>
+                </div>
+                <div class="card-body">
+                    <form method="get" asp-action="Browse" id="filterForm">
+                        <div class="filter-group">
+                            <label class="form-label fw-bold">Card Type</label>
+                            <select class="form-select" name="name" asp-items="@(new SelectList(Model.Categories, Model.SelectedCategory))" id="categorySelect">
+                                <option value="">All Types</option>
+                            </select>
+                            <small class="text-muted">Shot, Positioning, Strategy</small>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="form-label fw-bold">Sub Type</label>
+                            <select class="form-select" name="subCategory" asp-items="@(new SelectList(Model.SubCategories, Model.SelectedSubCategory))" id="subCategorySelect">
+                                <option value="">All Sub Types</option>
+                            </select>
+                            <small class="text-muted">Serve, Forehand, Backhand, etc.</small>
+                        </div>
+
+                        <div class="filter-group">
+                            <label class="form-label fw-bold">Surface</label>
+                            <select class="form-select" name="surface" id="surfaceSelect">
+                                <option value="">All Surfaces</option>
+                                @foreach (Surface surface in Model.Surfaces)
+                                {
+                                    <option value="@surface.Id" selected="@(Model.SelectedSurface == surface.Id.ToString())">@surface.Name</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="wildCardCheck" name="isWildCard" value="true">
+                                <label class="form-check-label" for="wildCardCheck">
+                                    Wild Cards Only
+                                </label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100">Apply Filters</button>
+                        <button type="button" class="btn btn-outline-secondary w-100 mt-2" id="clearFilters">Clear Filters</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="card filter-card">
+                <div class="card-header stat-header">
+                    <h5 class="header-title">Card Stats Filter</h5>
+                </div>
+                <div class="card-body">
+                    <div class="filter-group">
+                        <label for="powerRange" class="form-label stat-label">
+                            <span>Power</span>
+                            <span id="powerValue">Any</span>
+                        </label>
+                        <input type="range" class="form-range" id="powerRange" min="0" max="100" value="0">
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="precisionRange" class="form-label stat-label">
+                            <span>Precision</span>
+                            <span id="precisionValue">Any</span>
+                        </label>
+                        <input type="range" class="form-range" id="precisionRange" min="0" max="100" value="0">
+                    </div>
+
+                    <div class="filter-group">
+                        <label for="energyRange" class="form-label stat-label">
+                            <span>Energy</span>
+                            <span id="energyValue">Any</span>
+                        </label>
+                        <input type="range" class="form-range" id="energyRange" min="0" max="100" value="0">
+                    </div>
+
+                    <button type="button" class="btn btn-info w-100" id="applyStatFilters">Apply Stat Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <p class="mb-0"><strong>@Model.Cards.Count()</strong> cards found</p>
+                <div class="d-flex">
+                    <select class="form-select me-2" id="sortSelect">
+                        <option value="name">Sort by Name</option>
+                        <option value="power">Sort by Power</option>
+                        <option value="precision">Sort by Precision</option>
+                        <option value="energy">Sort by Energy Consumption</option>
+                    </select>
+                    <div class="btn-group" role="group">
+                        <button type="button" class="btn btn-outline-secondary active" id="gridView">
+                            <i class="bi bi-grid-3x3-gap-fill"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary" id="listView">
+                            <i class="bi bi-list-ul"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            @if (!Model.Cards.Any())
+            {
+                <div class="alert alert-info">
+                    <h4 class="alert-heading">No tennis cards found!</h4>
+                    <p>Try adjusting your filter criteria or browse our complete collection.</p>
+                </div>
+            }
+            else
+            {
+                <div class="grid-view" id="cardsContainer">
+                    @foreach (Card card in Model.Cards)
+                    {
+                        <div class="card-item"
+                             data-power="@card.Power"
+                             data-precision="@card.Precision"
+                             data-energy="@card.EnergyConsumption"
+                             data-wild="@card.IsWildCard.ToString().ToLower()">
+                            <div class="card h-100 card-shadow @(card.IsWildCard ? "wild-card-border" : "")">
+                                @if (card.IsWildCard)
+                                {
+                                    <div class="wild-card-badge">
+                                        <span class="badge warning-badge">WILD CARD</span>
+                                    </div>
+                                }
+
+                                <div class="card-body">
+                                    <h5 class="card-title">@card.Name</h5>
+                                    <h6 class="card-subtitle mb-2 text-muted">@card.CardCategory.Name - @card.CardCategory.SubCategory</h6>
+
+                                    <p class="card-text">@card.Description</p>
+
+                                    <div class="stats-container">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span>Power:</span>
+                                            <div class="progress progress-container">
+                                                <div class="progress-bar power-bar" role="progressbar" style="width: @(card.Power)%">@card.Power</div>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span>Precision:</span>
+                                            <div class="progress progress-container">
+                                                <div class="progress-bar precision-bar" role="progressbar" style="width: @(card.Precision)%">@card.Precision</div>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <span>Energy:</span>
+                                            <div class="progress progress-container">
+                                                <div class="progress-bar energy-bar" role="progressbar" style="width: @(card.EnergyConsumption)%">@card.EnergyConsumption</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @if (!string.IsNullOrEmpty(card.SpecialEffect))
+                                    {
+                                        <div class="special-effect">
+                                            <h6 class="special-effect-title">Special Effect:</h6>
+                                            <p>@card.SpecialEffect</p>
+                                        </div>
+                                    }
+
+                                    @if (card.ClayBonus > 0 || card.GrassBonus > 0 || card.HardCourtBonus > 0)
+                                    {
+                                        <div class="surface-bonuses">
+                                            <h6>Surface Bonuses:</h6>
+                                            <div class="surface-badges">
+                                                @if (card.ClayBonus > 0)
+                                                {
+                                                    <span class="badge clay-badge">Clay +@card.ClayBonus%</span>
+                                                }
+                                                @if (card.GrassBonus > 0)
+                                                {
+                                                    <span class="badge grass-badge">Grass +@card.GrassBonus%</span>
+                                                }
+                                                @if (card.HardCourtBonus > 0)
+                                                {
+                                                    <span class="badge hard-badge">Hard +@card.HardCourtBonus%</span>
+                                                }
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="card-footer card-actions">
+                                    <a href="@Url.Action("Details", "Cards", new { id = card.Id })" class="btn btn-sm btn-primary view-details-btn">View Card Details</a>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            $("#clearFilters").click(function () {
+                $("#categorySelect, #subCategorySelect, #surfaceSelect").val('');
+                $("#wildCardCheck").prop('checked', false);
+                $("#filterForm").submit();
+            });
+
+            $("#listView").click(function () {
+                $(this).addClass('active');
+                $("#gridView").removeClass('active');
+                $("#cardsContainer").removeClass('grid-view').addClass('list-view');
+                $(".card").addClass('flex-row-card');
+            });
+
+            $("#gridView").click(function () {
+                $(this).addClass('active');
+                $("#listView").removeClass('active');
+                $("#cardsContainer").removeClass('list-view').addClass('grid-view');
+                $(".card").removeClass('flex-row-card');
+            });
+
+            $("#powerRange").on("input", function () {
+                var value = $(this).val();
+                $("#powerValue").text(value > 0 ? value + "+" : "Any");
+            });
+
+            $("#precisionRange").on("input", function () {
+                var value = $(this).val();
+                $("#precisionValue").text(value > 0 ? value + "+" : "Any");
+            });
+
+            $("#energyRange").on("input", function () {
+                var value = $(this).val();
+                $("#energyValue").text(value > 0 ? value + "+" : "Any");
+            });
+
+            $("#applyStatFilters").click(function () {
+                var minPower = parseInt($("#powerRange").val());
+                var minPrecision = parseInt($("#precisionRange").val());
+                var minEnergy = parseInt($("#energyRange").val());
+                var isWildCard = $("#wildCardCheck").is(":checked");
+
+                $(".card-item").each(function () {
+                    var power = parseInt($(this).data("power"));
+                    var precision = parseInt($(this).data("precision"));
+                    var energy = parseInt($(this).data("energy"));
+                    var wild = $(this).data("wild") === "true";
+
+                    var show = (power >= minPower || minPower === 0) &&
+                        (precision >= minPrecision || minPrecision === 0) &&
+                        (energy >= minEnergy || minEnergy === 0) &&
+                        (!isWildCard || wild);
+
+                    $(this).toggle(show);
+                });
+
+                updateCardCount();
+            });
+
+            function updateCardCount() {
+                var visibleCards = $(".card-item:visible").length;
+                $("p strong").text(visibleCards);
+            }
+
+            $("#sortSelect").change(function () {
+                const sortBy = $(this).val();
+                const $container = $("#cardsContainer");
+                const $items = $container.children('.card-item').get();
+
+                $items.sort(function (a, b) {
+                    if (sortBy === 'name') {
+                        return $(a).find('.card-title').text().localeCompare($(b).find('.card-title').text());
+                    } else if (sortBy === 'power') {
+                        return parseInt($(b).data('power')) - parseInt($(a).data('power'));
+                    } else if (sortBy === 'precision') {
+                        return parseInt($(b).data('precision')) - parseInt($(a).data('precision'));
+                    } else if (sortBy === 'energy') {
+                        return parseInt($(a).data('energy')) - parseInt($(b).data('energy'));
+                    }
+                    return 0;
+                });
+
+                $.each($items, function (i, item) {
+                    $container.append(item);
+                });
+            });
+        });
+    </script>
+}

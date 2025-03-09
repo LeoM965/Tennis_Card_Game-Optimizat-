@@ -1,0 +1,132 @@
+﻿@model Tennis_Card_Game.Models.Match
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Match Details</title>
+    <style>
+        .container {
+            width: 90%;
+            margin: 0 auto;
+        }
+
+        .match-details {
+            margin-bottom: 20px;
+        }
+
+            .match-details h2 {
+                color: #333;
+            }
+
+        .match-score {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+
+        .set-details {
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+
+        .game-details {
+            margin-left: 20px;
+            border-left: 1px solid #eee;
+            padding-left: 10px;
+        }
+
+        .point-details {
+            margin-left: 40px;
+        }
+
+        .card-played {
+            background-color: #f9f9f9;
+            padding: 5px;
+            margin: 5px 0;
+            border-radius: 3px;
+        }
+
+        a {
+            text-decoration: none;
+            color: #0066cc;
+        }
+
+            a:hover {
+                text-decoration: underline;
+            }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Match Details</h1>
+        <p><a href="/Matches/Index">Back to List</a></p>
+
+        <div class="match-details">
+            <h2>@Model.Player1.Name vs @Model.Player2.Name</h2>
+            <p><strong>Tournament:</strong> @(Model.Tournament?.Name ?? "Exhibition Match")</p>
+            <p><strong>Surface:</strong> @Model.Surface.Name</p>
+            <p><strong>Weather:</strong> @(Model.WeatherCondition?.Name ?? "Not specified")</p>
+            <p><strong>Start Time:</strong> @Model.StartTime.ToString("yyyy-MM-dd HH:mm")</p>
+            <p><strong>Status:</strong> @(Model.IsCompleted ? "Completed" : "In Progress")</p>
+            @if (Model.IsCompleted && Model.EndTime.HasValue)
+            {
+                <p><strong>End Time:</strong> @Model.EndTime.Value.ToString("yyyy-MM-dd HH:mm")</p>
+                <p><strong>Duration:</strong> @((Model.EndTime.Value - Model.StartTime).ToString(@"hh\:mm\:ss"))</p>
+            }
+        </div>
+
+        <div class="match-score">
+            <span>@Model.Player1.Name @Model.Player1Sets - @Model.Player2Sets @Model.Player2.Name</span>
+        </div>
+
+        <h3>Set Details</h3>
+        @if (Model.Sets != null && Model.Sets.Any())
+        {
+            @foreach (var set in Model.Sets.OrderBy(s => s.SetNumber))
+            {
+                <div class="set-details">
+                    <h4>Set @set.SetNumber: @set.Player1Games - @set.Player2Games</h4>
+
+                    @if (set.Games != null && set.Games.Any())
+                    {
+                        @foreach (var game in set.Games.OrderBy(g => g.GameNumber))
+                        {
+                            <div class="game-details">
+                                <h5>Game @game.GameNumber: @(game.ServerId == Model.Player1Id ? Model.Player1.Name : Model.Player2.Name) Serving</h5>
+                                <p>Winner: @(game.WinnerId == Model.Player1Id ? Model.Player1.Name : Model.Player2.Name)</p>
+
+                                @if (game.Points != null && game.Points.Any())
+                                {
+                                    @foreach (var point in game.Points.OrderBy(p => p.PointNumber))
+                                    {
+                                        <div class="point-details">
+                                            <p>Point @point.PointNumber: @(point.WinnerId == Model.Player1Id ? Model.Player1.Name : Model.Player2.Name) won</p>
+
+                                            @if (point.PlayedCards != null && point.PlayedCards.Any())
+                                            {
+                                                <p>Cards played:</p>
+                                                @foreach (var playedCard in point.PlayedCards)
+                                                {
+                                                    <div class="card-played">
+                                                        <strong>@(playedCard.PlayerId == Model.Player1Id ? Model.Player1.Name : Model.Player2.Name):</strong>
+                                                        @playedCard.Card.Name
+                                                    </div>
+                                                }
+                                            }
+                                        </div>
+                                    }
+                                }
+                            </div>
+                        }
+                    }
+                </div>
+            }
+        }
+        else
+        {
+            <p>No sets played yet.</p>
+        }
+    </div>
+</body>
+</html>

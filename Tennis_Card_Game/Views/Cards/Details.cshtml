@@ -1,0 +1,247 @@
+﻿@model Tennis_Card_Game.Models.Card
+
+@{
+    ViewData["Title"] = "Card Details";
+}
+
+<style>
+    .card-wrapper {
+        display: flex;
+        justify-content: center;
+        margin: 30px 0;
+    }
+
+    .tennis-card {
+        width: 300px;
+        height: 420px;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border-radius: 15px;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s;
+    }
+
+        .tennis-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .wildcard {
+        background: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
+    }
+
+    .header {
+        text-align: center;
+        border-bottom: 2px solid #3490dc;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+    }
+
+    .category {
+        font-size: 14px;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .name {
+        font-size: 22px;
+        font-weight: bold;
+        margin: 5px 0;
+        color: #2c3e50;
+    }
+
+    .stats {
+        display: flex;
+        justify-content: space-between;
+        margin: 15px 0;
+    }
+
+    .stat {
+        text-align: center;
+        flex: 1;
+    }
+
+    .value {
+        font-size: 24px;
+        font-weight: bold;
+        color: #3490dc;
+    }
+
+    .label {
+        font-size: 12px;
+        color: #6c757d;
+        text-transform: uppercase;
+    }
+
+    .description {
+        font-size: 14px;
+        color: #2c3e50;
+        height: 80px;
+        overflow-y: auto;
+        margin: 10px 0;
+        padding: 5px;
+        background-color: rgba(255, 255, 255, 0.5);
+        border-radius: 5px;
+    }
+
+    .effect {
+        font-style: italic;
+        color: #e74c3c;
+        font-size: 14px;
+        margin: 10px 0;
+    }
+
+    .surfaces {
+        display: flex;
+        justify-content: space-between;
+        margin: 10px 0;
+    }
+
+    .surface {
+        text-align: center;
+        padding: 5px;
+        border-radius: 5px;
+        width: 30%;
+        font-size: 13px;
+        font-weight: bold;
+    }
+
+    .clay {
+        background-color: #e17055;
+        color: white;
+    }
+
+    .grass {
+        background-color: #00b894;
+        color: white;
+    }
+
+    .hard {
+        background-color: #0984e3;
+        color: white;
+    }
+
+    .badge {
+        text-align: center;
+        margin-top: 10px;
+    }
+
+    .synergies {
+        margin-top: 30px;
+    }
+</style>
+
+<div class="container mt-4">
+    <h1 class="text-center mb-4">Card Details</h1>
+
+    <div class="card-wrapper">
+        <div class="tennis-card @(Model.IsWildCard ? "wildcard" : "")">
+            <div class="header">
+                <div class="category">@Model.CardCategory.Name - @Model.CardCategory.SubCategory</div>
+                <div class="name">@Model.Name</div>
+            </div>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="value">@Model.Power</div>
+                    <div class="label">Power</div>
+                </div>
+                <div class="stat">
+                    <div class="value">@Model.Precision</div>
+                    <div class="label">Precision</div>
+                </div>
+                <div class="stat">
+                    <div class="value">@Model.EnergyConsumption</div>
+                    <div class="label">Energy</div>
+                </div>
+            </div>
+
+            <div class="description">
+                @(string.IsNullOrEmpty(Model.Description) ? "No description available." : Model.Description)
+            </div>
+
+            @if (!string.IsNullOrEmpty(Model.SpecialEffect))
+            {
+                <div class="effect">
+                    Special: @Model.SpecialEffect
+                </div>
+            }
+
+            <div class="surfaces">
+                <div class="surface clay">
+                    Clay<br />+@Model.ClayBonus%
+                </div>
+                <div class="surface grass">
+                    Grass<br />+@Model.GrassBonus%
+                </div>
+                <div class="surface hard">
+                    Hard<br />+@Model.HardCourtBonus%
+                </div>
+            </div>
+
+            @if (Model.IsWildCard)
+            {
+                <div class="badge">
+                    <span class="bg-warning text-dark p-2 rounded">WILD CARD</span>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="card synergies">
+        <div class="card-header bg-warning text-dark">
+            <h4>Card Synergies</h4>
+        </div>
+        <div class="card-body">
+            @if (Model.SynergiesAsCard1.Count > 0 || Model.SynergiesAsCard2.Count > 0)
+            {
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>Cards</th>
+                                <th>Bonus</th>
+                                <th>Description</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (CardSynergy synergy in Model.SynergiesAsCard1)
+                            {
+                                <tr>
+                                    <td>@Model.Name + @synergy.Card2.Name</td>
+                                    <td>+@synergy.BonusPercentage%</td>
+                                    <td>@synergy.Description</td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@synergy.Card2.Id" class="btn btn-sm btn-primary">View Card</a>
+                                    </td>
+                                </tr>
+                            }
+                            @foreach (CardSynergy synergy in Model.SynergiesAsCard2)
+                            {
+                                <tr>
+                                    <td>@synergy.Card1.Name + @Model.Name</td>
+                                    <td>+@synergy.BonusPercentage%</td>
+                                    <td>@synergy.Description</td>
+                                    <td>
+                                        <a asp-action="Details" asp-route-id="@synergy.Card1.Id" class="btn btn-sm btn-primary">View Card</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted">This card doesn't have any synergies.</p>
+            }
+        </div>
+    </div>
+
+    <div class="mt-3 mb-5 text-center">
+        <a asp-action="Browse" class="btn btn-secondary">Back to Browse</a>
+    </div>
+</div>

@@ -1,0 +1,284 @@
+﻿@using Tennis_Card_Game.ViewModel
+@model Tennis_Card_Game.ViewModel.TournamentViewModel
+
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #34495e;
+        --accent-color: #3498db;
+        --background-color: #f4f6f7;
+        --text-color: #2c3e50;
+        --card-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        --success-color: #2ecc71;
+        --warning-color: #f39c12;
+        --danger-color: #e74c3c;
+        --info-color: #3498db;
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    body {
+        background-color: var(--background-color);
+        color: var(--text-color);
+        line-height: 1.6;
+    }
+
+    .tournament-details-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .tournament-details-header {
+        background-color: var(--accent-color);
+        color: white;
+        padding: 1.5rem;
+        border-radius: 12px 12px 0 0;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .tournament-details-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .tournament-info-card, .tournament-rewards-card {
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: var(--card-shadow);
+        padding: 1.5rem;
+    }
+
+    .tournament-info-title, .tournament-rewards-title {
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        font-weight: 600;
+        border-bottom: 2px solid var(--accent-color);
+        padding-bottom: 0.5rem;
+    }
+
+    .tournament-info-detail {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+        color: var(--secondary-color);
+    }
+
+    .tournament-info-label {
+        font-weight: 500;
+        opacity: 0.7;
+    }
+
+    .tournament-info-value {
+        font-weight: 600;
+    }
+
+    .tournament-matches-container {
+        margin-top: 2rem;
+    }
+
+    .tournament-matches-title {
+        color: var(--primary-color);
+        margin-bottom: 1rem;
+        font-weight: 600;
+    }
+
+    .tournament-matches-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0 0.5rem;
+    }
+
+        .tournament-matches-table th {
+            background-color: var(--accent-color);
+            color: white;
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .tournament-matches-table td {
+            background-color: white;
+            padding: 0.75rem;
+            box-shadow: var(--card-shadow);
+        }
+
+    .match-status-completed {
+        color: var(--success-color);
+        font-weight: 600;
+    }
+
+    .match-status-in-progress {
+        color: var(--warning-color);
+        font-weight: 600;
+    }
+
+    .join-button {
+        display: inline-block;
+        background-color: var(--accent-color);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 600;
+        margin-top: 1.5rem;
+        transition: background-color 0.3s;
+    }
+
+        .join-button:hover {
+            background-color: #2980b9;
+        }
+
+    .registration-message {
+        margin-top: 1.5rem;
+        padding: 0.75rem;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+
+    .success-message {
+        background-color: rgba(46, 204, 113, 0.1);
+        color: var(--success-color);
+        border: 1px solid var(--success-color);
+    }
+
+    .error-message {
+        background-color: rgba(231, 76, 60, 0.1);
+        color: var(--danger-color);
+        border: 1px solid var(--danger-color);
+    }
+
+    .info-message {
+        background-color: rgba(52, 152, 219, 0.1);
+        color: var(--info-color);
+        border: 1px solid var(--info-color);
+    }
+</style>
+
+<div class="tournament-details-container">
+    <div class="tournament-details-header">
+        <h1>@Model.Name Tournament Details</h1>
+    </div>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="registration-message success-message">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="registration-message error-message">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    @if (TempData["InfoMessage"] != null)
+    {
+        <div class="registration-message info-message">
+            @TempData["InfoMessage"]
+        </div>
+    }
+
+    <div class="tournament-details-content">
+        <div class="tournament-info-card">
+            <h2 class="tournament-info-title">Tournament Information</h2>
+            <div class="tournament-info-detail">
+                <span class="tournament-info-label">Start Time</span>
+                <span class="tournament-info-value">@Model.StartTime.ToString(@"hh\:mm")</span>
+            </div>
+            <div class="tournament-info-detail">
+                <span class="tournament-info-label">End Time</span>
+                <span class="tournament-info-value">@Model.EndTime.ToString(@"hh\:mm")</span>
+            </div>
+            <div class="tournament-info-detail">
+                <span class="tournament-info-label">Surface</span>
+                <span class="tournament-info-value">@Model.Surface</span>
+            </div>
+            <div class="tournament-info-detail">
+                <span class="tournament-info-label">Level</span>
+                <span class="tournament-info-value">@Model.Level</span>
+            </div>
+
+            @{
+                TimeSpan currentTime = DateTime.Now.TimeOfDay;
+                TimeSpan registrationStartTime = Model.StartTime.Subtract(TimeSpan.FromHours(1));
+                TimeSpan registrationEndTime = Model.StartTime.Subtract(TimeSpan.FromMinutes(5));
+            }
+
+            @if (currentTime >= registrationStartTime && currentTime <= registrationEndTime)
+            {
+                <a href="@Url.Action("Join", "Tournaments", new { id = Model.Id })" class="join-button">Register for the tournament</a>
+            }
+            else if (currentTime < registrationStartTime)
+            {
+                <div class="registration-message info-message">
+                    Registration will be available one hour before the start of the tournament.
+                </div>
+            }
+            else if (currentTime > registrationEndTime)
+            {
+                <div class="registration-message error-message">
+                    Registrations are closed for this tournament.
+                </div>
+            }
+        </div>
+
+        <div class="tournament-rewards-card">
+            <h2 class="tournament-rewards-title">Tournament Rewards</h2>
+            <div class="tournament-info-detail">
+                <span class="tournament-info-label">XP Reward</span>
+                <span class="tournament-info-value">@Model.XpReward</span>
+            </div>
+            <div class="tournament-info-detail">
+                <span class="tournament-info-label">Coin Reward</span>
+                <span class="tournament-info-value">@Model.CoinReward</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="tournament-matches-container">
+        <h2 class="tournament-matches-title">Tournament Matches</h2>
+        <table class="tournament-matches-table">
+            <thead>
+                <tr>
+                    <th>Match</th>
+                    <th>Start Time</th>
+                    <th>Status</th>
+                    <th>Result</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (MatchViewModel match in Model.Matches)
+                {
+                    <tr>
+                        <td>@match.Player1Name vs @match.Player2Name</td>
+                        <td>@match.StartTime.ToString("dd MMM yyyy HH:mm")</td>
+                        <td>
+                            <span class="@(match.IsCompleted ? "match-status-completed" : "match-status-in-progress")">
+                                @(match.IsCompleted ? "Completed" : "In Progress")
+                            </span>
+                        </td>
+                        <td>
+                            @if (match.IsCompleted)
+                            {
+                                <strong>@match.Player1Sets - @match.Player2Sets</strong>
+                            }
+                            else
+                            {
+                                <span>Not Finished</span>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

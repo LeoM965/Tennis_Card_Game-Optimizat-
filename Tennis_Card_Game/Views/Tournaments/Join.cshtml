@@ -1,0 +1,72 @@
+﻿@model Tennis_Card_Game.ViewModel.TournamentJoinViewModel
+@{
+    ViewData["Title"] = "Join Tournament";
+}
+
+<div class="container py-4">
+    <h1 class="mb-4">Join Tournament</h1>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">@Model.TournamentName</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">Surface:</dt>
+                        <dd class="col-sm-8">@Model.Surface</dd>
+
+                        <dt class="col-sm-4">Start Time:</dt>
+                        <dd class="col-sm-8">@Model.StartTime.ToString(@"hh\:mm")</dd>
+
+                        <dt class="col-sm-4">Level:</dt>
+                        <dd class="col-sm-8">@Model.Level</dd>
+                    </dl>
+                </div>
+                <div class="col-md-6">
+                    <dl class="row">
+                        <dt class="col-sm-4">XP Reward:</dt>
+                        <dd class="col-sm-8">@Model.XpReward</dd>
+
+                        <dt class="col-sm-4">Coin Reward:</dt>
+                        <dd class="col-sm-8">@Model.CoinReward</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">Tournament Information</h5>
+        </div>
+        <div class="card-body">
+            <p>By joining this tournament, you will:</p>
+            <ul>
+                <li>Participate in a bracket of 16 players (you and 15 AI opponents)</li>
+                <li>Play up to 4 matches if you advance to the final</li>
+                <li>Earn XP and coins based on your performance</li>
+                <li>Gain experience playing on @Model.Surface surface</li>
+            </ul>
+
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle"></i> Once you join, you cannot leave the tournament.
+            </div>
+        </div>
+    </div>
+
+    <div class="text-center">
+        <form asp-action="JoinConfirm" method="post">
+            <input type="hidden" name="tournamentId" value="@Model.TournamentId" />
+            @Html.AntiForgeryToken()
+
+            <button type="submit" class="btn btn-primary btn-lg">
+                <i class="fas fa-check-circle"></i> Confirm Registration
+            </button>
+            <a asp-action="Details" asp-route-id="@Model.TournamentId" class="btn btn-secondary btn-lg">
+                <i class="fas fa-times-circle"></i> Cancel
+            </a>
+        </form>
+    </div>
+</div>

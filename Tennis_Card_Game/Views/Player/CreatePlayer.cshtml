@@ -1,0 +1,166 @@
+﻿@model Tennis_Card_Game.Models.Player
+<div class="container">
+    <h2>Create Your Tennis Card Character</h2>
+
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success">
+            @TempData["SuccessMessage"]
+        </div>
+    }
+
+    <form asp-action="CreatePlayer" method="post" class="player-form">
+        <div asp-validation-summary="All" class="text-danger"></div>
+
+        <div class="form-group">
+            <label asp-for="Name" class="form-label">Character Name</label>
+            <input asp-for="Name" class="form-control" placeholder="Enter your character's name" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="PlayingStyleId" class="form-label">Playing Style</label>
+            <div class="playing-style-grid">
+                @foreach (var style in ViewBag.PlayingStyles)
+                {
+                    <div class="playing-style-option">
+                        <input class="form-check-input" type="radio" asp-for="PlayingStyleId" id="style-@(style.Value)" value="@style.Value" />
+                        <label class="form-check-label" for="style-@(style.Value)">
+                            @style.Text
+                        </label>
+                    </div>
+                }
+            </div>
+            <span asp-validation-for="PlayingStyleId" class="text-danger"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="SpecialAbilityId" class="form-label">Special Ability</label>
+            <div class="special-ability-grid">
+                @foreach (var ability in ViewBag.SpecialAbilities)
+                {
+                    <div class="special-ability-option">
+                        <input class="form-check-input" type="radio" asp-for="SpecialAbilityId" id="ability-@(ability.Value)" value="@(ability.Value)" />
+                        <label class="form-check-label" for="ability-@(ability.Value)">
+                            @ability.Text
+                        </label>
+                    </div>
+                }
+            </div>
+            <span asp-validation-for="SpecialAbilityId" class="text-danger"></span>
+        </div>
+
+        <div class="text-center">
+            <button type="submit" class="create-character-btn">
+                Create Character
+            </button>
+        </div>
+    </form>
+</div>
+
+@section Styles {
+    <style>
+        .container {
+            max-width: 400px;
+            margin: 20px auto;
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .player-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .form-control {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            transition: border-color 0.3s ease;
+        }
+
+            .form-control:focus {
+                outline: none;
+                border-color: #007bff;
+                box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+            }
+
+        .text-danger {
+            color: #dc3545;
+            font-size: 0.8em;
+            margin-top: 5px;
+        }
+
+        .playing-style-grid,
+        .special-ability-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .playing-style-option,
+        .special-ability-option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+            .playing-style-option:hover,
+            .special-ability-option:hover {
+                background-color: #f0f0f0;
+                transform: scale(1.05);
+            }
+
+        .create-character-btn {
+            padding: 12px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+            .create-character-btn:hover {
+                background-color: #218838;
+            }
+
+        .form-check-input {
+            margin-right: 10px;
+        }
+    </style>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const styleOptions = document.querySelectorAll('.playing-style-option, .special-ability-option');
+            styleOptions.forEach(option => {
+                option.addEventListener('click', function () {
+                    styleOptions.forEach(opt => opt.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+        });
+    </script>
+}

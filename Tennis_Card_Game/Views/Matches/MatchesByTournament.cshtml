@@ -1,0 +1,97 @@
+﻿@model IEnumerable<Tennis_Card_Game.Models.Match>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Matches by Tournament</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        a {
+            text-decoration: none;
+            color: #0066cc;
+        }
+
+            a:hover {
+                text-decoration: underline;
+            }
+
+        .container {
+            width: 90%;
+            margin: 0 auto;
+        }
+
+        .tournament-info {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Matches in @ViewBag.TournamentName</h1>
+        <p><a href="/Matches/Index">Back to All Matches</a></p>
+
+        <div class="tournament-info">
+            <p><strong>Surface:</strong> @ViewBag.TournamentSurface</p>
+            <p><strong>Level:</strong> @ViewBag.TournamentLevel</p>
+        </div>
+
+        @if (Model.Any())
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Round</th>
+                        <th>Player 1</th>
+                        <th>Player 2</th>
+                        <th>Start Time</th>
+                        <th>Status</th>
+                        <th>Score</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var match in Model)
+                    {
+                        <tr>
+                            <td>@match.Round</td>
+                            <td>@match.Player1.Name</td>
+                            <td>@match.Player2.Name</td>
+                            <td>@match.StartTime.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@(match.IsCompleted ? "Completed" : "Scheduled")</td>
+                            <td>@match.Player1Sets - @match.Player2Sets</td>
+                            <td>
+                                <a href="/Matches/Details/@match.Id">Details</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+
+            <p><a href="/Matches/TournamentBracket/@ViewBag.TournamentId">View Tournament Bracket</a></p>
+        }
+        else
+        {
+            <p>No matches found for this tournament.</p>
+        }
+    </div>
+</body>
+</html>

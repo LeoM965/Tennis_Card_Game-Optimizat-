@@ -1,0 +1,179 @@
+﻿@using Tennis_Card_Game.ViewModel
+@model List<Tennis_Card_Game.ViewModel.TournamentViewModel>
+
+<style>
+    :root {
+        --primary-color: #2c3e50;
+        --secondary-color: #34495e;
+        --accent-color: #3498db;
+        --background-color: #f4f6f7;
+        --text-color: #2c3e50;
+        --card-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+
+    body {
+        background-color: var(--background-color);
+        color: var(--text-color);
+        line-height: 1.6;
+    }
+
+    .tournaments-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem;
+    }
+
+    .tournaments-title {
+        text-align: center;
+        color: var(--primary-color);
+        margin-bottom: 2rem;
+        font-weight: 600;
+        letter-spacing: -0.5px;
+    }
+
+    .tournaments-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .tournament-card {
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
+        transition: transform 0.3s ease;
+    }
+
+        .tournament-card:hover {
+            transform: translateY(-5px);
+        }
+
+    .tournament-card-header {
+        background-color: var(--accent-color);
+        color: white;
+        padding: 1rem;
+        font-weight: 600;
+    }
+
+    .tournament-card-body {
+        padding: 1.5rem;
+    }
+
+    .tournament-detail {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+        color: var(--secondary-color);
+    }
+
+    .tournament-detail-label {
+        font-weight: 500;
+        opacity: 0.7;
+    }
+
+    .tournament-detail-value {
+        font-weight: 600;
+    }
+
+    .tournament-card-footer {
+        padding: 1rem;
+        background-color: var(--background-color);
+        text-align: center;
+    }
+
+    .tournament-buttons {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.5rem;
+    }
+
+    .tournament-details-btn, .tournament-join-btn {
+        display: inline-block;
+        text-decoration: none;
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        transition: background-color 0.3s ease;
+        flex: 1;
+        text-align: center;
+    }
+
+    .tournament-details-btn {
+        background-color: var(--accent-color);
+        color: white;
+    }
+
+        .tournament-details-btn:hover {
+            background-color: var(--primary-color);
+        }
+
+    .tournament-join-btn {
+        background-color: #27ae60; 
+        color: white;
+    }
+
+        .tournament-join-btn:hover {
+            background-color: #219653; 
+        }
+</style>
+
+<div class="tournaments-container">
+    <h1 class="tournaments-title">Tennis Tournament Battles</h1>
+
+    <div class="tournaments-grid">
+        @foreach (TournamentViewModel tournament in Model)
+        {
+            <div class="tournament-card">
+                <div class="tournament-card-header">
+                    @tournament.Name
+                </div>
+                <div class="tournament-card-body">
+                    <div class="tournament-detail">
+                        <span class="tournament-detail-label">Duration</span>
+                        <span class="tournament-detail-value">
+                            @tournament.StartTime.ToString(@"hh\:mm") -
+                            @tournament.EndTime.ToString(@"hh\:mm")
+                        </span>
+                    </div>
+                    <div class="tournament-detail">
+                        <span class="tournament-detail-label">Surface</span>
+                        <span class="tournament-detail-value">@tournament.Surface</span>
+                    </div>
+                    <div class="tournament-detail">
+                        <span class="tournament-detail-label">Level</span>
+                        <span class="tournament-detail-value">@tournament.Level</span>
+                    </div>
+                    <div class="tournament-detail">
+                        <span class="tournament-detail-label">XP Reward</span>
+                        <span class="tournament-detail-value">@tournament.XpReward</span>
+                    </div>
+                    <div class="tournament-detail">
+                        <span class="tournament-detail-label">Coin Reward</span>
+                        <span class="tournament-detail-value">@tournament.CoinReward</span>
+                    </div>
+                    <div class="tournament-detail">
+                        <span class="tournament-detail-label">Matches</span>
+                        <span class="tournament-detail-value">@tournament.MatchCount</span>
+                    </div>
+                </div>
+                <div class="tournament-card-footer">
+                    <div class="tournament-buttons">
+                        <a href="@Url.Action("Details", new { id = tournament.Id })" class="tournament-details-btn">
+                            Tournament Details
+                        </a>
+                        <a href="@Url.Action("Join", new { id = tournament.Id })" class="tournament-join-btn">
+                            Join Tournament
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

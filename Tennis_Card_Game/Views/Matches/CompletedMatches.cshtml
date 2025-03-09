@@ -1,0 +1,94 @@
+﻿@model IEnumerable<Tennis_Card_Game.Models.Match>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Completed Matches</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        a {
+            text-decoration: none;
+            color: #0066cc;
+        }
+
+            a:hover {
+                text-decoration: underline;
+            }
+
+        .container {
+            width: 90%;
+            margin: 0 auto;
+        }
+
+        .winner {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Completed Matches</h1>
+        <p>
+            <a href="/Matches/Index">All Matches</a> |
+            <a href="/Matches/LiveMatches">Live Matches</a> |
+            <a href="/Matches/UpcomingMatches">Upcoming Matches</a>
+        </p>
+
+        @if (Model.Any())
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tournament</th>
+                        <th>Player 1</th>
+                        <th>Player 2</th>
+                        <th>Surface</th>
+                        <th>Date</th>
+                        <th>Final Score</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var match in Model)
+                    {
+                        <tr>
+                            <td>@(match.Tournament?.Name ?? "Exhibition Match")</td>
+                            <td class="@(match.Player1Sets > match.Player2Sets ? "winner" : "")">@match.Player1.Name</td>
+                            <td class="@(match.Player2Sets > match.Player1Sets ? "winner" : "")">@match.Player2.Name</td>
+                            <td>@match.Surface.Name</td>
+                            <td>@match.StartTime.ToString("yyyy-MM-dd")</td>
+                            <td>@match.Player1Sets - @match.Player2Sets</td>
+                            <td>
+                                <a href="/Matches/Details/@match.Id">Details</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>There are no completed matches yet.</p>
+        }
+    </div>
+</body>
+</html>

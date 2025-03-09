@@ -1,0 +1,119 @@
+﻿@model IEnumerable<Tennis_Card_Game.Models.Match>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Matches by Player</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        a {
+            text-decoration: none;
+            color: #0066cc;
+        }
+
+            a:hover {
+                text-decoration: underline;
+            }
+
+        .container {
+            width: 90%;
+            margin: 0 auto;
+        }
+
+        .player-stats {
+            margin-bottom: 20px;
+        }
+
+        .win {
+            color: green;
+        }
+
+        .loss {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Matches for @ViewBag.PlayerName</h1>
+        <p><a href="/Matches/Index">Back to All Matches</a></p>
+
+        <div class="player-stats">
+            <p><strong>Matches Played:</strong> @ViewBag.MatchCount</p>
+            <p><strong>Wins:</strong> @ViewBag.WinCount</p>
+            <p><strong>Win Rate:</strong> @ViewBag.WinRate.ToString("F1")%</p>
+            <p><a href="/Matches/PopularCardsByPlayer/@Model.First().Player1Id">View Popular Cards</a></p>
+        </div>
+
+        @if (Model.Any())
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tournament</th>
+                        <th>Opponent</th>
+                        <th>Surface</th>
+                        <th>Date</th>
+                        <th>Result</th>
+                        <th>Score</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var match in Model)
+                    {
+                        bool isPlayer1 = match.Player1Id == int.Parse(ViewBag.PlayerId.ToString());
+                        bool playerWon = false;
+
+                        if (match.IsCompleted)
+                        {
+                            playerWon = (isPlayer1 && match.Player1Sets > match.Player2Sets) ||
+                            (!isPlayer1 && match.Player2Sets > match.Player1Sets);
+                        }
+
+                        <tr>
+                            <td>@(match.Tournament?.Name ?? "Exhibition Match")</td>
+                            <td>@(isPlayer1 ? match.Player2.Name : match.Player1.Name)</td>
+                            <td>@match.Surface.Name</td>
+                            <td>@match.StartTime.ToString("yyyy-MM-dd")</td>
+                            <td class="@(match.IsCompleted ? (playerWon ? "win" : "loss") : "")">
+                                @(match.IsCompleted ? (playerWon ? "Win" : "Loss") : "Scheduled")
+                            </td>
+                            <td>
+                                @(isPlayer1 ? match.Player1Sets : match.Player2Sets) -
+                                @(isPlayer1 ? match.Player2Sets : match.Player1Sets)
+                            </td>
+                            <td>
+                                <a href="/Matches/Details/@match.Id">Details</a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>No matches found for this player.</p>
+        }
+    </div>
+</body>
+</html>

@@ -1,0 +1,95 @@
+﻿@model IEnumerable<Tennis_Card_Game.ViewModel.CardUsageViewModel>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Card Usage Statistics</title>
+    <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        a {
+            text-decoration: none;
+            color: #0066cc;
+        }
+
+            a:hover {
+                text-decoration: underline;
+            }
+
+        .container {
+            width: 90%;
+            margin: 0 auto;
+        }
+
+        .progress-bar {
+            background-color: #f1f1f1;
+            border-radius: 3px;
+            height: 20px;
+            width: 100%;
+        }
+
+        .progress {
+            background-color: #4CAF50;
+            height: 20px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Card Usage Statistics</h1>
+        <p><a href="/Matches/Index">Back to Matches</a></p>
+
+        @if (Model.Any())
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Card Name</th>
+                        <th>Usage Count</th>
+                        <th>Win Rate</th>
+                        <th>Win Rate Visualization</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var card in Model)
+                    {
+                        <tr>
+                            <td>@card.CardName</td>
+                            <td>@card.UsageCount</td>
+                            <td>@card.WinRate.ToString("F1")%</td>
+                            <td>
+                                <div class="progress-bar">
+                                    <div class="progress" style="width: @(card.WinRate)%;"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <p>No card usage data available.</p>
+        }
+    </div>
+</body>
+</html>

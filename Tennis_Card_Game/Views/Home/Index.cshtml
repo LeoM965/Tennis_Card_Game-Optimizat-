@@ -1,0 +1,314 @@
+﻿@model GameIntroductionVM
+
+<div class="game-introduction">
+    <div class="welcome-banner">
+        <h1>Welcome to Tennis Card Battle! 🎾</h1>
+        <p class="lead">Where tennis strategy meets card game excitement!</p>
+    </div>
+
+    <div class="basic-rules-section">
+        <h2>📜 Core Rules</h2>
+        <div class="rules-grid">
+            @foreach (string rule in Model.BasicRules)
+            {
+                <div class="rule-card">
+                    <div class="rule-icon">@(Model.BasicRules.IndexOf(rule) + 1)</div>
+                    <p>@rule</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="starter-players">
+        <h2>🌟 Recommended Starter Players</h2>
+        <div class="players-grid">
+            @foreach (Player player in Model.StarterPlayers)
+            {
+                <div class="player-card">
+                    <h3>@player.Name</h3>
+                    <div class="player-stats">
+                        <span>Level: @player.Level</span>
+                        <div class="energy-container">
+                            <div class="energy-bar" style="width: @((player.CurrentEnergy * 100)/player.MaxEnergy)%"></div>
+                        </div>
+                    </div>
+                    <p class="playing-style">Style: @player.PlayingStyle.Name</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="essential-cards">
+        <h2>🃏 Essential Cards</h2>
+        <div class="cards-grid">
+            @foreach (var card in Model.EssentialCards)
+            {
+                <div class="card-preview" data-category="@card.CardCategory.Name">
+                    <h4>@card.Name</h4>
+                    <div class="card-stats">
+                        <span>Power: @card.Power</span>
+                        <span>Energy: @card.EnergyConsumption</span>
+                    </div>
+                    <p class="card-category">@card.CardCategory.SubCategory</p>
+                </div>
+            }
+        </div>
+    </div>
+
+    <div class="tournaments-section">
+        <h2>🏆 Recent Tournaments</h2>
+        <div class="tournaments-grid">
+            @foreach (var tournament in Model.RecentTournaments)
+            {
+                <div class="tournament-card">
+                    <div class="trophy-icon">🏆</div>
+                    <h3>@tournament.Name</h3>
+                    <p>Surface: @tournament.Surface.Name</p>
+                    <p>Prize: <span class="coin-reward">@tournament.CoinReward coins</span></p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    :root {
+        --primary-color: #4ecdc4;
+        --secondary-color: #ff6b6b;
+        --accent-color: #ffea00;
+        --dark-color: #2c3e50;
+        --light-color: #f8f9fa;
+        --shadow-sm: 0 6px 16px rgba(0, 0, 0, 0.08);
+        --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.12);
+        --shadow-lg: 0 12px 28px rgba(0, 0, 0, 0.15);
+        --radius-sm: 8px;
+        --radius-md: 16px;
+        --transition: all 0.3s ease;
+    }
+
+    body {
+        background-color: var(--light-color);
+        font-family: 'Poppins', system-ui, sans-serif;
+        line-height: 1.6;
+        color: var(--dark-color);
+    }
+
+    .game-introduction {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    h2 {
+        color: var(--dark-color);
+        text-align: center;
+        font-size: 2rem;
+        margin: 2.5rem 0 1.5rem;
+        font-weight: 700;
+    }
+
+    .welcome-banner {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding: 4rem 1rem;
+        background: linear-gradient(135deg, var(--secondary-color), var(--primary-color), #45b7d1);
+        border-radius: var(--radius-md);
+        color: white;
+        box-shadow: var(--shadow-md);
+        position: relative;
+        overflow: hidden;
+    }
+
+        .welcome-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 20%, transparent 60%);
+            transform: rotate(45deg);
+            animation: shine 8s infinite linear;
+        }
+
+        .welcome-banner h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: 800;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .welcome-banner .lead {
+            font-size: 1.4rem;
+            opacity: 0.95;
+            font-weight: 300;
+            position: relative;
+        }
+
+    .rules-grid, .players-grid, .tournaments-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 2rem;
+        margin-top: 2rem;
+    }
+
+    .rule-card, .player-card, .tournament-card {
+        background: white;
+        padding: 1.5rem;
+        border-radius: var(--radius-md);
+        box-shadow: var(--shadow-sm);
+        transition: var(--transition);
+    }
+
+    .rule-card {
+        background: linear-gradient(145deg, #ffffff, var(--light-color));
+        border: 2px solid rgba(255,255,255,0.3);
+    }
+
+        .rule-card:hover, .player-card:hover, .tournament-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-md);
+        }
+
+    .rule-icon {
+        width: 50px;
+        height: 50px;
+        background: linear-gradient(45deg, var(--secondary-color), #ff8e8e);
+        color: white;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        margin-bottom: 1rem;
+        font-weight: bold;
+        box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
+    }
+
+    .player-card h3, .tournament-card h3 {
+        font-size: 1.6rem;
+        margin-bottom: 1rem;
+        color: var(--primary-color);
+        font-weight: 700;
+    }
+
+    .energy-container {
+        background: #f1f1f1;
+        height: 10px;
+        border-radius: 5px;
+        margin: 0.8rem 0;
+        overflow: hidden;
+    }
+
+    .energy-bar {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary-color), #45b7d1);
+        border-radius: 5px;
+        transition: width 0.5s ease;
+    }
+
+    .playing-style {
+        color: var(--secondary-color);
+        font-weight: 600;
+        margin-top: 1rem;
+    }
+
+    .card-preview {
+        background: linear-gradient(135deg, #3a0ca3, #4361ee);
+        padding: 1.5rem;
+        border-radius: var(--radius-md);
+        transition: var(--transition);
+        box-shadow: var(--shadow-md);
+        color: white;
+    }
+
+        .card-preview:hover {
+            transform: translateY(-6px) rotate(2deg);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-preview h4 {
+            font-size: 1.4rem;
+            margin: 0.5rem 0 1rem;
+            color: var(--accent-color);
+            text-align: center;
+            font-weight: 700;
+        }
+
+    .card-stats {
+        display: flex;
+        justify-content: space-between;
+        margin: 1rem 0;
+    }
+
+        .card-stats span:first-child {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .card-stats span:last-child {
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+    .card-category {
+        margin-top: 1rem;
+        background: rgba(0, 0, 0, 0.2);
+        padding: 0.5rem;
+        border-radius: 4px;
+        text-align: center;
+        font-weight: 500;
+        font-size: 0.9rem;
+    }
+
+    .trophy-icon {
+        top: 1rem;
+        right: 1rem;
+        font-size: 2rem;
+    }
+
+    .coin-reward {
+        color: #ffb700;
+        font-weight: 600;
+    }
+
+    @@keyframes shine {
+        0% {
+            transform: translateY(-100%) rotate(25deg);
+        }
+
+        100% {
+            transform: translateY(100%) rotate(25deg);
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .welcome-banner {
+            padding: 2rem 1rem;
+        }
+
+            .welcome-banner h1 {
+                font-size: 2rem;
+            }
+
+            .welcome-banner .lead {
+                font-size: 1.1rem;
+            }
+
+        h2 {
+            font-size: 1.6rem;
+        }
+
+        .rule-card, .player-card, .card-preview, .tournament-card {
+            padding: 1.2rem;
+        }
+    }
+</style>
