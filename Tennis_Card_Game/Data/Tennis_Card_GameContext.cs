@@ -26,7 +26,6 @@ namespace Tennis_Card_Game.Data
         public DbSet<Surface> Surfaces { get; set; }
         public DbSet<WeatherCondition> WeatherConditions { get; set; }
         public DbSet<Tournament> Tournaments { get; set; }
-
         public DbSet<TournamentRegistration> TournamentRegistrations { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tennis_Card_Game.Data;
 
@@ -11,9 +12,11 @@ using Tennis_Card_Game.Data;
 namespace Tennis_Card_Game.Migrations
 {
     [DbContext(typeof(Tennis_Card_GameContext))]
-    partial class Tennis_Card_GameContextModelSnapshot : ModelSnapshot
+    [Migration("20250309221808_AI")]
+    partial class AI
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

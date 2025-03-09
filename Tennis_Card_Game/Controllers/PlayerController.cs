@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Tennis_Card_Game.Data;
 using Tennis_Card_Game.Models;
 using Tennis_Card_Game.Services;
+using Tennis_Card_Game.ViewModel;
 
 namespace Tennis_Card_Game.Controllers
 {
@@ -348,5 +349,35 @@ namespace Tennis_Card_Game.Controllers
             };
             return View(trainingOptions);
         }
+        [HttpGet]
+        public async Task<IActionResult> Rankings()
+        {
+            ApplicationUser? user = await _userManager.GetUserAsync(User);
+            if (!user.PlayerId.HasValue)
+            {
+                return RedirectToAction("CreatePlayer");
+            }
+
+            
+            List<Player> rankedPlayers = await _context.Players
+                .Include(p => p.PlayingStyle)
+                .Include(p => p.SpecialAbility)
+                .OrderByDescending(p => p.Level)
+                .ThenByDescending(p => p.Experience)
+                .ToListAsync();
+
+            Player? currentPlayer = rankedPlayers.FirstOrDefault(p => p.Id == user.PlayerId.Value);
+            int currentPlayerRank = currentPlayer != null ? rankedPlayers.IndexOf(currentPlayer) + 1 : 0;
+
+            var viewModel = new RankingsViewModel
+            {
+                Players = rankedPlayers,
+                CurrentPlayer = currentPlayer,
+                CurrentPlayerRank = currentPlayerRank
+            };
+
+            return View(viewModel);
+        }
+
     }
 }
