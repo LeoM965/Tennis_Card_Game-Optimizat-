@@ -38,11 +38,6 @@ namespace Tennis_Card_Game.Models
             this.IsCompleted = false;
             this.Player1Sets = 0;
             this.Player2Sets = 0;
-            this.Player1 = new Player();
-            this.Player2 = new Player();
-            this.Surface = new Surface();
-            this.WeatherCondition = new WeatherCondition();
-            this.Tournament = new Tournament();
             this.Round = 1; 
             this.MatchOrder = 0; 
         }

@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -27,8 +26,6 @@ namespace Tennis_Card_Game.Controllers
         {
             try
             {
-                _logger.LogInformation("Loading tournaments for Index view");
-
                 var tournaments = await _context.Tournaments
                     .Include(t => t.Surface)
                     .Include(t => t.Matches)
@@ -57,12 +54,11 @@ namespace Tennis_Card_Game.Controllers
                     })
                     .ToListAsync();
 
-                _logger.LogInformation($"Successfully loaded {tournaments.Count} tournaments");
                 return View(tournaments);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error loading tournaments: {ErrorMessage}", ex.Message);
+                _logger.LogError(ex, "Error loading tournaments");
                 TempData["Error"] = "An error occurred while loading tournaments.";
                 return View(new List<TournamentViewModel>());
             }
@@ -71,15 +67,10 @@ namespace Tennis_Card_Game.Controllers
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
-            {
-                _logger.LogWarning("Tournament details requested without ID");
                 return NotFound();
-            }
 
             try
             {
-                _logger.LogInformation($"Loading details for tournament ID {id}");
-
                 var tournament = await _context.Tournaments
                     .Include(t => t.Surface)
                     .Include(t => t.Matches)
@@ -112,17 +103,13 @@ namespace Tennis_Card_Game.Controllers
                     .FirstOrDefaultAsync();
 
                 if (tournament == null)
-                {
-                    _logger.LogWarning($"Tournament with ID {id} not found");
                     return NotFound();
-                }
 
-                _logger.LogInformation($"Successfully loaded details for tournament ID {id}");
                 return View(tournament);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error loading tournament details: {ErrorMessage}", ex.Message);
+                _logger.LogError(ex, "Error loading tournament details");
                 TempData["Error"] = "An error occurred while loading tournament details.";
                 return RedirectToAction(nameof(Index));
             }
@@ -133,9 +120,6 @@ namespace Tennis_Card_Game.Controllers
             try
             {
                 var currentTime = DateTime.Now.TimeOfDay;
-                var today = DateTime.Today;
-
-                _logger.LogInformation("Fetching current tournaments. Time: {CurrentTime}", currentTime);
 
                 var currentTournaments = await _context.Tournaments
                     .Include(t => t.Surface)
@@ -168,12 +152,11 @@ namespace Tennis_Card_Game.Controllers
                     })
                     .ToListAsync();
 
-                _logger.LogInformation($"Found {currentTournaments.Count} current tournaments");
                 return View(currentTournaments);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error fetching current tournaments: {ErrorMessage}", ex.Message);
+                _logger.LogError(ex, "Error fetching current tournaments");
                 TempData["Error"] = "An error occurred while loading current tournaments.";
                 return View(new List<TournamentViewModel>());
             }
@@ -183,72 +166,51 @@ namespace Tennis_Card_Game.Controllers
         public async Task<IActionResult> Join(int? id)
         {
             if (id == null)
-            {
-                _logger.LogWarning("Join action called without tournament ID");
                 return NotFound();
-            }
 
             try
             {
-                _logger.LogInformation($"Attempting to join tournament ID {id}");
-
                 var tournament = await _context.Tournaments
                     .Include(t => t.Surface)
                     .FirstOrDefaultAsync(t => t.Id == id);
 
                 if (tournament == null)
-                {
-                    _logger.LogWarning($"Tournament with ID {id} not found");
                     return NotFound();
-                }
 
                 var currentTime = DateTime.Now;
                 var tournamentStartDateTime = DateTime.Today.Add(tournament.StartTime);
                 var registrationOpenTime = tournamentStartDateTime.AddHours(-1);
 
-                _logger.LogInformation("Join check - CurrentTime: {CurrentTime}, TournamentStart: {TournamentStart}",
-                    currentTime, tournamentStartDateTime);
-
                 if (currentTime < registrationOpenTime)
                 {
-                    _logger.LogInformation($"Registration not open yet for tournament ID {id}");
                     TempData["Error"] = "Registration is not open yet. You can register 1 hour before the tournament starts.";
-                    return RedirectToAction(nameof(Details), new { id = id });
+                    return RedirectToAction(nameof(Details), new { id });
                 }
 
-                DateTime tournamentEndDateTime;
-                if (tournament.EndTime.TotalHours == 0)
-                {
-                    tournamentEndDateTime = DateTime.Today.AddDays(1);
-                }
-                else
-                {
-                    tournamentEndDateTime = DateTime.Today.Add(tournament.EndTime);
-                }
+                DateTime tournamentEndDateTime = tournament.EndTime.TotalHours == 0
+                    ? DateTime.Today.AddDays(1)
+                    : DateTime.Today.Add(tournament.EndTime);
 
                 var registrationCloseTime = tournamentEndDateTime.AddMinutes(-5);
 
                 if (currentTime > registrationCloseTime)
                 {
-                    _logger.LogInformation($"Registration closed for tournament ID {id}");
                     TempData["Error"] = "Registration is closed. The tournament is about to end.";
-                    return RedirectToAction(nameof(Details), new { id = id });
+                    return RedirectToAction(nameof(Details), new { id });
                 }
 
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (string.IsNullOrEmpty(userId))
                 {
-                    _logger.LogWarning("User not logged in while attempting to join tournament");
                     TempData["Error"] = "You must be logged in to join a tournament.";
-                    return RedirectToAction(nameof(Details), new { id = id });
+                    return RedirectToAction(nameof(Details), new { id });
                 }
 
                 var userPlayer = await _context.Players.FirstOrDefaultAsync(p => p.UserId == userId);
                 if (userPlayer == null)
                 {
-                    _logger.LogWarning($"No player found for user ID {userId}");
                     TempData["Error"] = "You don't have a player to participate in the tournament!";
-                    return RedirectToAction(nameof(Details), new { id = id });
+                    return RedirectToAction(nameof(Details), new { id });
                 }
 
                 var existingMatch = await _context.Matches
@@ -257,9 +219,8 @@ namespace Tennis_Card_Game.Controllers
 
                 if (existingMatch)
                 {
-                    _logger.LogInformation($"User already registered in tournament ID {id}");
                     TempData["Error"] = "You are already registered in this tournament!";
-                    return RedirectToAction(nameof(Details), new { id = id });
+                    return RedirectToAction(nameof(Details), new { id });
                 }
 
                 var viewModel = new TournamentJoinViewModel
@@ -273,14 +234,13 @@ namespace Tennis_Card_Game.Controllers
                     CoinReward = tournament.CoinReward
                 };
 
-                _logger.LogInformation($"Showing join view for tournament ID {id}");
                 return View(viewModel);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in Join action: {ErrorMessage}", ex.Message);
+                _logger.LogError(ex, "Error in Join action");
                 TempData["Error"] = "An error occurred while trying to join the tournament.";
-                return RedirectToAction(nameof(Details), new { id = id });
+                return RedirectToAction(nameof(Details), new { id });
             }
         }
 
@@ -295,9 +255,7 @@ namespace Tennis_Card_Game.Controllers
                     .FirstOrDefaultAsync(t => t.Id == tournamentId);
 
                 if (tournament == null)
-                {
                     return NotFound();
-                }
 
                 var currentTime = DateTime.Now;
                 var tournamentStartDateTime = DateTime.Today.Add(tournament.StartTime);
@@ -309,15 +267,9 @@ namespace Tennis_Card_Game.Controllers
                     return RedirectToAction(nameof(Details), new { id = tournamentId });
                 }
 
-                DateTime tournamentEndDateTime;
-                if (tournament.EndTime.TotalHours == 0)
-                {
-                    tournamentEndDateTime = DateTime.Today.AddDays(1);
-                }
-                else
-                {
-                    tournamentEndDateTime = DateTime.Today.Add(tournament.EndTime);
-                }
+                DateTime tournamentEndDateTime = tournament.EndTime.TotalHours == 0
+                    ? DateTime.Today.AddDays(1)
+                    : DateTime.Today.Add(tournament.EndTime);
 
                 var registrationCloseTime = tournamentEndDateTime.AddMinutes(-5);
 
@@ -371,11 +323,14 @@ namespace Tennis_Card_Game.Controllers
                 }
 
                 var aiOpponents = await _context.Players
-     .Where(p => p.UserId == null)
-     .Include(p => p.PlayingStyle)
-     .OrderBy(p => Guid.NewGuid())
-     .Take(15)
-     .ToListAsync();
+                    .Where(p => p.UserId == null)
+                    .Join(_context.PlayingStyles,
+                        player => player.PlayingStyleId,
+                        style => style.Id,
+                        (player, style) => player)
+                    .OrderBy(p => Guid.NewGuid())
+                    .Take(15)
+                    .ToListAsync();
 
                 if (aiOpponents.Count < 15)
                 {
@@ -393,49 +348,23 @@ namespace Tennis_Card_Game.Controllers
                     };
 
                     _context.TournamentRegistrations.Add(registration);
-
                     await _context.SaveChangesAsync();
 
-                    var matches = new List<Match>();
-
-                    for (int i = 0; i < 8; i++)
-                    {
-                        var player1Id = i == 0 ? userPlayer.Id : aiOpponents[i - 1].Id;
-                        var player2Id = aiOpponents[i + 7].Id;
-
-                        var match = new Match
-                        {
-                            TournamentId = tournament.Id,
-                            Player1Id = player1Id,
-                            Player2Id = player2Id,
-                            SurfaceId = surface.Id,
-                            Round = 1,
-                            MatchOrder = i + 1,
-                            StartTime = DateTime.Today.Add(tournament.StartTime.Add(TimeSpan.FromMinutes(i * 15))),
-                            IsCompleted = false,
-                            Player1Sets = 0,
-                            Player2Sets = 0
-                        };
-
-                        matches.Add(match);
-                    }
-
-                    _context.Matches.AddRange(matches);
-                    await _context.SaveChangesAsync();
+                    await GenerateTournamentMatches(tournament, userPlayer, aiOpponents, surface);
 
                     TempData["Success"] = "You have successfully registered for the tournament and matches have been generated!";
                     return RedirectToAction(nameof(Details), new { id = tournamentId });
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error during tournament join: {Message}", ex.Message);
+                    _logger.LogError(ex, "Error during tournament join");
                     TempData["Error"] = $"Error joining tournament: {ex.Message}";
                     return RedirectToAction(nameof(Details), new { id = tournamentId });
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error in JoinConfirm: {Message}", ex.Message);
+                _logger.LogError(ex, "Unexpected error in JoinConfirm");
                 TempData["Error"] = $"An unexpected error occurred: {ex.Message}";
                 return RedirectToAction(nameof(Details), new { id = tournamentId });
             }
@@ -443,37 +372,33 @@ namespace Tennis_Card_Game.Controllers
 
         private async Task GenerateTournamentMatches(Tournament tournament, Player userPlayer, List<Player> aiOpponents, Surface surface)
         {
-            _logger.LogInformation($"Generating matches for tournament ID {tournament.Id}");
-
             if (aiOpponents.Count < 15)
-            {
                 throw new InvalidOperationException("Not enough AI players for tournament");
-            }
 
-            var allPlayerIds = new List<int> { userPlayer.Id };
-            allPlayerIds.AddRange(aiOpponents.Select(o => o.Id));
-
-            var matches = new List<Match>();
-
-            for (int i = 0; i < 8; i++)
+            var matches = new List<Match>
             {
-                var player1Id = allPlayerIds[i];
-                var player2Id = allPlayerIds[15 - i];
-
-                var player1Exists = await _context.Players.AnyAsync(p => p.Id == player1Id);
-                var player2Exists = await _context.Players.AnyAsync(p => p.Id == player2Id);
-
-                if (!player1Exists || !player2Exists)
-                {
-                    _logger.LogError("Player not found: Player1={Player1Id}, Player2={Player2Id}", player1Id, player2Id);
-                    throw new InvalidOperationException("Player not found in database");
-                }
-
-                var match = new Match
+                new Match
                 {
                     TournamentId = tournament.Id,
-                    Player1Id = player1Id,
-                    Player2Id = player2Id,
+                    Player1Id = userPlayer.Id,
+                    Player2Id = aiOpponents[7].Id,
+                    SurfaceId = surface.Id,
+                    Round = 1,
+                    MatchOrder = 1,
+                    StartTime = DateTime.Today.Add(tournament.StartTime),
+                    IsCompleted = false,
+                    Player1Sets = 0,
+                    Player2Sets = 0
+                }
+            };
+
+            for (int i = 1; i < 8; i++)
+            {
+                matches.Add(new Match
+                {
+                    TournamentId = tournament.Id,
+                    Player1Id = aiOpponents[i - 1].Id,
+                    Player2Id = aiOpponents[i + 7].Id,
                     SurfaceId = surface.Id,
                     Round = 1,
                     MatchOrder = i + 1,
@@ -481,18 +406,20 @@ namespace Tennis_Card_Game.Controllers
                     IsCompleted = false,
                     Player1Sets = 0,
                     Player2Sets = 0
-                };
-
-                matches.Add(match);
+                });
             }
 
-            foreach (var match in matches)
-            {
-                _context.Matches.Add(match);
-            }
+            var playerIds = matches.SelectMany(m => new[] { m.Player1Id, m.Player2Id }).Distinct().ToList();
+            var existingPlayerIds = await _context.Players
+                .Where(p => playerIds.Contains(p.Id))
+                .Select(p => p.Id)
+                .ToListAsync();
 
+            if (existingPlayerIds.Count != playerIds.Count)
+                throw new InvalidOperationException("Player not found in database");
+
+            _context.Matches.AddRange(matches);
             await _context.SaveChangesAsync();
-            _logger.LogInformation($"Successfully created {matches.Count} matches for tournament ID {tournament.Id}");
         }
     }
 }
