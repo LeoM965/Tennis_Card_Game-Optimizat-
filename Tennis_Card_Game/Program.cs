@@ -18,6 +18,9 @@ builder.Services.AddScoped<ICardService, CardService>();
 builder.Services.AddScoped<IPlayerService, PlayerSearchService>();
 builder.Services.AddScoped<PlayerService>();
 builder.Services.AddScoped<TrainingService>();
+builder.Services.AddScoped<IMatchService, MatchService>();
+builder.Services.AddScoped<PlayerService>();
+builder.Services.AddScoped<ITournamentService,TournamentService>();
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<Tennis_Card_GameContext>()
