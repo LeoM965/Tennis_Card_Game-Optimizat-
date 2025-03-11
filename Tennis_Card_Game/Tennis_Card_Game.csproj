@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <Folder Include="Repos\" />
+    <Folder Include="Views\PlayerComparision\" />
   </ItemGroup>
 
 </Project>

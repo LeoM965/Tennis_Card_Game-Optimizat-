@@ -1,0 +1,197 @@
+﻿@model IEnumerable<Tennis_Card_Game.Models.Match>
+@{
+    ViewData["Title"] = $"{ViewBag.TournamentName} - Tournament Bracket";
+    
+    var matchesByRound = Model.GroupBy(m => m.Round).OrderBy(g => g.Key).ToDictionary(g => g.Key, g => g.OrderBy(m => m.MatchOrder).ToList());
+    var roundCount = matchesByRound.Count;
+}
+
+<div class="container-fluid mt-4">
+    <h2 class="mb-4">@ViewBag.TournamentName - Tournament Bracket</h2>
+    
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No matches are scheduled for this tournament yet.</div>
+    }
+    else
+    {
+        <div class="tournament-bracket-container">
+            <div class="d-flex tournament-rounds">
+                @for (int round = 1; round <= roundCount; round++)
+                {
+                    var roundName = GetRoundName(round, roundCount);
+                    var roundMatches = matchesByRound.ContainsKey(round) ? matchesByRound[round] : new List<Tennis_Card_Game.Models.Match>();
+                    var expectedMatchCount = Math.Pow(2, roundCount - round);
+                    
+                    <div class="tournament-round" data-round="@round">
+                        <h4 class="text-center mb-3">@roundName</h4>
+                        
+                        <div class="matches-container">
+                            @for (int i = 0; i < expectedMatchCount; i++)
+                            {
+                                var match = i < roundMatches.Count ? roundMatches[i] : null;
+                                
+                                <div class="bracket-match @(match == null ? "empty-match" : "")">
+                                    @if (match != null)
+                                    {
+                                        <div class="card">
+                                            <div class="card-header bg-light p-2">
+                                                <small>@match.StartTime.ToString("MMM dd, HH:mm")</small>
+                                            </div>
+                                            <div class="card-body p-2">
+                                                <div class="player @(match.IsCompleted && match.Player1Sets > match.Player2Sets ? "winner" : "")">
+                                                    <span class="player-name">@match.Player1?.Name</span>
+                                                    <span class="player-score">@match.Player1Sets</span>
+                                                </div>
+                                                <div class="player @(match.IsCompleted && match.Player2Sets > match.Player1Sets ? "winner" : "")">
+                                                    <span class="player-name">@match.Player2?.Name</span>
+                                                    <span class="player-score">@match.Player2Sets</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-footer p-1 text-center">
+                                                <a href="@Url.Action("Details", new { id = match.Id })" class="btn btn-sm btn-outline-primary">Details</a>
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="card placeholder-card">
+                                            <div class="card-body p-2 text-muted">
+                                                <div class="player">
+                                                    <span class="player-name">TBD</span>
+                                                    <span class="player-score">-</span>
+                                                </div>
+                                                <div class="player">
+                                                    <span class="player-name">TBD</span>
+                                                    <span class="player-score">-</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@section Styles {
+    <style>
+        .tournament-bracket-container {
+            overflow-x: auto;
+            width: 100%;
+            padding: 20px 0;
+        }
+        
+        .tournament-rounds {
+            display: flex;
+            flex-direction: row;
+            align-items: flex-start;
+            width: fit-content;
+            min-width: 100%;
+        }
+        
+        .tournament-round {
+            flex: 1;
+            min-width: 220px;
+            padding: 0 10px;
+        }
+        
+        .matches-container {
+            position: relative;
+            padding-top: 30px;
+        }
+        
+        .bracket-match {
+            position: relative;
+            margin-bottom: 30px;
+        }
+        
+        .bracket-match .card {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .placeholder-card {
+            border: 1px dashed #ddd;
+            background-color: #f9f9f9;
+        }
+        
+        .player {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .player:last-child {
+            border-bottom: none;
+        }
+        
+        .player.winner {
+            font-weight: bold;
+            background-color: rgba(40, 167, 69, 0.1);
+        }
+        
+        .player-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 140px;
+        }
+        
+        .player-score {
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        
+        .tournament-round[data-round="1"] .bracket-match {
+            margin-bottom: 10px;
+        }
+        
+        .tournament-round[data-round="2"] .bracket-match {
+            margin-bottom: 80px;
+        }
+        
+        .tournament-round[data-round="3"] .bracket-match {
+            margin-bottom: 200px;
+        }
+        
+        .tournament-round[data-round="4"] .bracket-match {
+            margin-bottom: 400px;
+        }
+        
+        @@media (max-width: 992px) {
+            .tournament-round {
+                min-width: 180px;
+            }
+            
+            .bracket-match .card {
+                width: 160px;
+            }
+        }
+    </style>
+}
+
+@functions {
+    public string GetRoundName(int round, int totalRounds)
+    {
+        if (round == totalRounds)
+            return "Final";
+        else if (round == totalRounds - 1)
+            return "Semi-Finals";
+        else if (round == totalRounds - 2)
+            return "Quarter-Finals";
+        else if (round == totalRounds - 3)
+            return "Round of 16";
+        else if (round == totalRounds - 4)
+            return "Round of 32";
+        else
+            return $"Round {round}";
+    }
+}

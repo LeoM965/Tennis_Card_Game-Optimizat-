@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Completed Matches</title>
+    <title>Live Matches</title>
     <style>
         table {
             border-collapse: collapse;
@@ -39,18 +39,19 @@
             margin: 0 auto;
         }
 
-        .winner {
+        .live-indicator {
+            color: red;
             font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Completed Matches</h1>
+        <h1>Live Matches <span class="live-indicator">• LIVE</span></h1>
         <p>
             <a href="/Matches/Index">All Matches</a> |
-            <a href="/Matches/LiveMatches">Live Matches</a> |
-            <a href="/Matches/UpcomingMatches">Upcoming Matches</a>
+            <a href="/MatchListing/UpcomingMatches">Upcoming Matches</a> |
+            <a href="/MatchListing/CompletedMatches">Completed Matches</a>
         </p>
 
         @if (Model.Any())
@@ -62,8 +63,8 @@
                         <th>Player 1</th>
                         <th>Player 2</th>
                         <th>Surface</th>
-                        <th>Date</th>
-                        <th>Final Score</th>
+                        <th>Start Time</th>
+                        <th>Current Score</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -72,13 +73,13 @@
                     {
                         <tr>
                             <td>@(match.Tournament?.Name ?? "Exhibition Match")</td>
-                            <td class="@(match.Player1Sets > match.Player2Sets ? "winner" : "")">@match.Player1.Name</td>
-                            <td class="@(match.Player2Sets > match.Player1Sets ? "winner" : "")">@match.Player2.Name</td>
+                            <td>@match.Player1.Name</td>
+                            <td>@match.Player2.Name</td>
                             <td>@match.Surface.Name</td>
-                            <td>@match.StartTime.ToString("yyyy-MM-dd")</td>
+                            <td>@match.StartTime.ToString("HH:mm")</td>
                             <td>@match.Player1Sets - @match.Player2Sets</td>
                             <td>
-                                <a href="/Matches/Details/@match.Id">Details</a>
+                                <a href="/Matches/Details/@match.Id">Match Details</a>
                             </td>
                         </tr>
                     }
@@ -87,7 +88,7 @@
         }
         else
         {
-            <p>There are no completed matches yet.</p>
+            <p>There are no live matches at the moment.</p>
         }
     </div>
 </body>

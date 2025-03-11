@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Upcoming Matches</title>
+    <title>Completed Matches</title>
     <style>
         table {
             border-collapse: collapse;
@@ -38,15 +38,19 @@
             width: 90%;
             margin: 0 auto;
         }
+
+        .winner {
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Upcoming Matches</h1>
+        <h1>Completed Matches</h1>
         <p>
             <a href="/Matches/Index">All Matches</a> |
-            <a href="/Matches/LiveMatches">Live Matches</a> |
-            <a href="/Matches/CompletedMatches">Completed Matches</a>
+            <a href="/MatchListing/LiveMatches">Live Matches</a> |
+            <a href="/MatchListing/UpcomingMatches">Upcoming Matches</a>
         </p>
 
         @if (Model.Any())
@@ -58,7 +62,8 @@
                         <th>Player 1</th>
                         <th>Player 2</th>
                         <th>Surface</th>
-                        <th>Start Time</th>
+                        <th>Date</th>
+                        <th>Final Score</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -67,10 +72,11 @@
                     {
                         <tr>
                             <td>@(match.Tournament?.Name ?? "Exhibition Match")</td>
-                            <td>@match.Player1.Name</td>
-                            <td>@match.Player2.Name</td>
+                            <td class="@(match.Player1Sets > match.Player2Sets ? "winner" : "")">@match.Player1.Name</td>
+                            <td class="@(match.Player2Sets > match.Player1Sets ? "winner" : "")">@match.Player2.Name</td>
                             <td>@match.Surface.Name</td>
-                            <td>@match.StartTime.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td>@match.StartTime.ToString("yyyy-MM-dd")</td>
+                            <td>@match.Player1Sets - @match.Player2Sets</td>
                             <td>
                                 <a href="/Matches/Details/@match.Id">Details</a>
                             </td>
@@ -81,7 +87,7 @@
         }
         else
         {
-            <p>There are no upcoming matches scheduled.</p>
+            <p>There are no completed matches yet.</p>
         }
     </div>
 </body>
