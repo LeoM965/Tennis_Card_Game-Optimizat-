@@ -13,6 +13,27 @@
             <p class="lead">Active tournaments happening right now.</p>
         </div>
     </div>
+    <div class="row mb-4">
+        <div class="col">
+            <div class="btn-group" role="group" aria-label="Match navigation">
+                <a asp-controller="Matches" asp-action="Index" class="btn btn-outline-primary">
+                    <i class="bi bi-list-ul"></i> All Matches
+                </a>
+                <a asp-controller="Matches" asp-action="LiveMatches" class="btn btn-outline-danger">
+                    <i class="bi bi-broadcast"></i> Live Matches
+                </a>
+                <a asp-controller="Matches" asp-action="UpcomingMatches" class="btn btn-outline-info">
+                    <i class="bi bi-calendar-event"></i> Upcoming Matches
+                </a>
+                <a asp-controller="Matches" asp-action="CompletedMatches" class="btn btn-outline-success">
+                    <i class="bi bi-check-circle"></i> Completed Matches
+                </a>
+                <a asp-controller="Matches" asp-action="CardUsageStats" class="btn btn-outline-secondary">
+                    <i class="bi bi-bar-chart"></i> Card Stats
+                </a>
+            </div>
+        </div>
+    </div>
 
     @if (!Model.Any())
     {
@@ -80,8 +101,14 @@
                             </ul>
                         </div>
                         <div class="card-footer bg-white">
-                            <div class="d-grid">
-                                <a asp-action="Details" asp-route-id="@tournament.Id" class="btn btn-outline-primary">View Details</a>
+                            <div class="d-grid gap-2">
+                                <a asp-action="Details" asp-route-id="@tournament.Id" class="btn btn-outline-primary">View Tournament Details</a>
+                                <a asp-controller="Matches" asp-action="MatchesByTournament" asp-route-tournamentId="@tournament.Id" class="btn btn-primary">
+                                    <i class="bi bi-trophy"></i> View Tournament Matches
+                                </a>
+                                <a asp-controller="Matches" asp-action="TournamentBracket" asp-route-tournamentId="@tournament.Id" class="btn btn-outline-secondary">
+                                    <i class="bi bi-diagram-3"></i> Tournament Bracket
+                                </a>
                             </div>
                         </div>
                     </div>
