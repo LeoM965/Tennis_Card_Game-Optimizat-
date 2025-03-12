@@ -26,16 +26,14 @@ namespace Tennis_Card_Game.Services
             _matchService = matchService ?? throw new ArgumentNullException(nameof(matchService));
         }
 
-        public async Task<List<TournamentViewModel>> GetAllTournamentsAsync()
-        {
-            return await _context.Tournaments
+        public async Task<List<TournamentViewModel>> GetAllTournamentsAsync() =>
+            await _context.Tournaments
                 .AsNoTracking()
                 .Include(t => t.Surface)
                 .Include(t => t.Matches)
                 .OrderByDescending(t => t.StartTime)
                 .Select(t => MapToTournamentViewModel(t))
                 .ToListAsync();
-        }
 
         public async Task<TournamentViewModel?> GetTournamentDetailsAsync(int tournamentId)
         {
@@ -46,8 +44,7 @@ namespace Tennis_Card_Game.Services
                     .ThenInclude(m => m.Player1)
                 .Include(t => t.Matches)
                     .ThenInclude(m => m.Player2)
-                .Where(t => t.Id == tournamentId)
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(t => t.Id == tournamentId);
 
             if (tournament == null)
                 return null;
@@ -55,7 +52,11 @@ namespace Tennis_Card_Game.Services
             DateTime now = DateTime.Now;
             DateTime tournamentStartDateTime = DateTime.Today.Add(tournament.StartTime);
 
-            var tournamentWithFilteredMatches = new Tournament
+            var filteredMatches = now >= tournamentStartDateTime
+                ? tournament.Matches.ToList()
+                : new List<Match>();
+
+            return MapToTournamentViewModel(new Tournament
             {
                 Id = tournament.Id,
                 Name = tournament.Name,
@@ -66,15 +67,13 @@ namespace Tennis_Card_Game.Services
                 Level = tournament.Level,
                 XpReward = tournament.XpReward,
                 CoinReward = tournament.CoinReward,
-                Matches = now >= tournamentStartDateTime ? tournament.Matches.ToList() : new List<Match>()
-            };
-
-            return MapToTournamentViewModel(tournamentWithFilteredMatches);
+                Matches = filteredMatches
+            });
         }
+
         public async Task<List<TournamentViewModel>> GetCurrentTournamentsAsync()
         {
             DateTime now = DateTime.Now;
-
             _logger.LogInformation("Checking for current tournaments at {CurrentTime}", now);
 
             var allTournaments = await _context.Tournaments
@@ -89,35 +88,25 @@ namespace Tennis_Card_Game.Services
             var currentTournaments = allTournaments.Where(t =>
             {
                 DateTime startDateTime = DateTime.Today.Add(t.StartTime);
-                DateTime endDateTime;
+                DateTime endDateTime = t.EndTime.TotalHours == 0
+                    ? DateTime.Today.AddDays(1)
+                    : DateTime.Today.Add(t.EndTime);
 
-                if (t.EndTime.TotalHours == 0)
-                {
-                    endDateTime = DateTime.Today.AddDays(1);
-                }
-                else
-                {
-                    endDateTime = DateTime.Today.Add(t.EndTime);
-                }
+                bool isActive = startDateTime <= now && now <= endDateTime;
 
                 _logger.LogInformation(
                     "Tournament: {Name}, Start: {Start}, End: {End}, Current: {Now}, IsActive: {IsActive}",
-                    t.Name,
-                    startDateTime,
-                    endDateTime,
-                    now,
-                    (startDateTime <= now && now <= endDateTime));
+                    t.Name, startDateTime, endDateTime, now, isActive);
 
-                return startDateTime <= now && now <= endDateTime;
-            })
-            .ToList();
+                return isActive;
+            }).ToList();
 
             _logger.LogInformation("Found {Count} current tournaments", currentTournaments.Count);
-
-            return currentTournaments.Select(t => MapToTournamentViewModel(t)).ToList();
+            return currentTournaments.Select(MapToTournamentViewModel).ToList();
         }
 
-        public async Task<(bool isEligible, string errorMessage, Player? player, Tournament? tournament)> CheckTournamentEligibilityAsync(int tournamentId, string? userId)
+        public async Task<(bool isEligible, string errorMessage, Player? player, Tournament? tournament)>
+            CheckTournamentEligibilityAsync(int tournamentId, string? userId)
         {
             if (string.IsNullOrEmpty(userId))
                 return (false, "You must be logged in to join a tournament.", null, null);
@@ -142,21 +131,22 @@ namespace Tennis_Card_Game.Services
             DateTime registrationOpenTime = tournamentStartDateTime.AddHours(-1);
 
             if (currentTime < registrationOpenTime)
-                return (false, "Registration is not open yet. You can register 1 hour before the tournament starts.", userPlayer, tournament);
+                return (false, "Registration is not open yet. You can register 1 hour before the tournament starts.",
+                    userPlayer, tournament);
 
             DateTime tournamentEndDateTime = tournament.EndTime.TotalHours == 0
                 ? DateTime.Today.AddDays(1)
                 : DateTime.Today.Add(tournament.EndTime);
-
             DateTime registrationCloseTime = tournamentEndDateTime.AddMinutes(-5);
 
             if (currentTime > registrationCloseTime)
-                return (false, "Registration is closed. The tournament is about to end.", userPlayer, tournament);
+                return (false, "Registration is closed. The tournament is about to end.",
+                    userPlayer, tournament);
 
             bool alreadyParticipating = await _context.Matches
                 .AsNoTracking()
-                .AnyAsync(m => m.TournamentId == tournamentId &&
-                          (m.Player1Id == userPlayer.Id || m.Player2Id == userPlayer.Id));
+                .Where(m => m.TournamentId == tournamentId && !m.IsCompleted)
+                .AnyAsync(m => m.Player1Id == userPlayer.Id || m.Player2Id == userPlayer.Id);
 
             if (alreadyParticipating)
                 return (false, "You are already participating in this tournament!", userPlayer, tournament);
@@ -167,6 +157,16 @@ namespace Tennis_Card_Game.Services
 
             if (alreadyRegistered)
                 return (false, "You are already registered in this tournament!", userPlayer, tournament);
+
+            bool tournamentStarted = await _context.Matches.AnyAsync(m => m.TournamentId == tournamentId);
+            bool availableSpots = await _context.Matches
+                .Where(m => m.TournamentId == tournamentId && m.Round == 1 && !m.IsCompleted)
+                .Include(m => m.Player1)
+                .Include(m => m.Player2)
+                .AnyAsync(m => m.Player1.UserId == null || m.Player2.UserId == null);
+
+            if (tournamentStarted && !availableSpots)
+                return (false, "No available spots in this tournament.", userPlayer, tournament);
 
             return (true, string.Empty, userPlayer, tournament);
         }
@@ -179,27 +179,14 @@ namespace Tennis_Card_Game.Services
                     await CheckTournamentEligibilityAsync(tournamentId, userId);
 
                 if (!isEligible || tournament == null || userPlayer == null)
-                {
                     return (false, errorMessage);
-                }
 
                 Surface? surface = await _context.Surfaces.FindAsync(tournament.SurfaceId);
                 if (surface == null)
-                {
                     return (false, "The playing surface was not found!");
-                }
 
-                List<Player> aiOpponents = await _context.Players
-                    .Where(p => p.UserId == null)
-                    .Include(p => p.PlayingStyle)
-                    .OrderBy(p => Guid.NewGuid())
-                    .Take(15)
-                    .ToListAsync();
-
-                if (aiOpponents.Count < 15)
-                {
-                    return (false, "There are not enough AI players in the database to generate a tournament!");
-                }
+                bool tournamentHasMatches = await _context.Matches
+                    .AnyAsync(m => m.TournamentId == tournamentId);
 
                 using var transaction = await _context.Database.BeginTransactionAsync();
 
@@ -215,7 +202,10 @@ namespace Tennis_Card_Game.Services
                     _context.TournamentRegistrations.Add(registration);
                     await _context.SaveChangesAsync();
 
-                    await GenerateTournamentMatchesAsync(tournament, userPlayer, aiOpponents, surface);
+                    if (!tournamentHasMatches)
+                        await GenerateTournamentMatchesAsync(tournament, userPlayer, surface);
+                    else
+                        await AddPlayerToTournamentAsync(tournament, userPlayer, surface);
 
                     await transaction.CommitAsync();
                     return (true, string.Empty);
@@ -234,20 +224,52 @@ namespace Tennis_Card_Game.Services
             }
         }
 
-        private async Task GenerateTournamentMatchesAsync(Tournament tournament, Player userPlayer, List<Player> aiOpponents, Surface surface)
+        private async Task AddPlayerToTournamentAsync(Tournament tournament, Player player, Surface surface)
         {
-            if (aiOpponents.Count < 15)
-                throw new InvalidOperationException("Not enough AI players for tournament");
+            var matchWithAI = await _context.Matches
+                .Include(m => m.Player1)
+                .Include(m => m.Player2)
+                .Where(m => m.TournamentId == tournament.Id && m.Round == 1 && !m.IsCompleted)
+                .FirstOrDefaultAsync(m => m.Player1.UserId == null || m.Player2.UserId == null);
 
-            Player? tbdPlayer = await _context.Players
-                .FirstOrDefaultAsync(p => p.Name == "Player");
+            if (matchWithAI != null)
+            {
+                if (matchWithAI.Player1.UserId == null)
+                    matchWithAI.Player1Id = player.Id;
+                else
+                    matchWithAI.Player2Id = player.Id;
+
+                await _context.SaveChangesAsync();
+            }
+            else
+                throw new InvalidOperationException("No available spots in the tournament.");
+        }
+
+        private async Task GenerateTournamentMatchesAsync(Tournament tournament, Player firstPlayer, Surface surface)
+        {
+            int registeredPlayersCount = await _context.TournamentRegistrations
+                .CountAsync(r => r.TournamentId == tournament.Id);
+
+            int aiPlayersNeeded = Math.Max(0, 16 - registeredPlayersCount);
+
+            List<Player> aiOpponents = await _context.Players
+                .Where(p => p.UserId == null)
+                .Include(p => p.PlayingStyle)
+                .OrderBy(p => Guid.NewGuid())
+                .Take(aiPlayersNeeded)
+                .ToListAsync();
+
+            if (aiOpponents.Count < aiPlayersNeeded)
+                throw new InvalidOperationException($"There are not enough AI players in the database. Need {aiPlayersNeeded} but only found {aiOpponents.Count}");
+
+            Player? tbdPlayer = await _context.Players.FirstOrDefaultAsync(p => p.Name == "Player");
 
             if (tbdPlayer == null)
             {
                 tbdPlayer = new Player
                 {
                     Name = "PlayerTBD",
-                    PlayingStyleId = aiOpponents.First().PlayingStyleId,
+                    PlayingStyleId = aiOpponents.FirstOrDefault()?.PlayingStyleId ?? 1,
                     UserId = null
                 };
                 _context.Players.Add(tbdPlayer);
@@ -262,22 +284,39 @@ namespace Tennis_Card_Game.Services
                 : DateTime.Today.Add(tournament.EndTime);
             TimeSpan tournamentDuration = endDateTime - startDateTime;
 
-            matches.Add(CreateMatch(tournament.Id, userPlayer.Id, aiOpponents[0].Id, surface.Id, 1, 1));
+            var registeredPlayers = await _context.TournamentRegistrations
+                .Where(r => r.TournamentId == tournament.Id)
+                .Select(r => r.Player)
+                .ToListAsync();
 
-            for (int i = 1; i < 8; i++)
+            List<Player> allPlayers = new List<Player>(registeredPlayers);
+            allPlayers.AddRange(aiOpponents);
+
+            var shuffledPlayers = allPlayers.OrderBy(p => Guid.NewGuid()).ToList();
+
+            for (int i = 0; i < 8; i++)
             {
-                matches.Add(CreateMatch(tournament.Id, aiOpponents[i * 2 - 1].Id, aiOpponents[i * 2].Id, surface.Id, 1, i + 1));
+                int player1Index = i * 2;
+                int player2Index = i * 2 + 1;
+
+                if (player2Index < shuffledPlayers.Count)
+                {
+                    matches.Add(CreateMatch(
+                        tournament.Id,
+                        shuffledPlayers[player1Index].Id,
+                        shuffledPlayers[player2Index].Id,
+                        surface.Id,
+                        1,
+                        i + 1
+                    ));
+                }
             }
 
             for (int i = 0; i < 4; i++)
-            {
                 matches.Add(CreateMatch(tournament.Id, tbdPlayer.Id, tbdPlayer.Id, surface.Id, 2, i + 1));
-            }
 
             for (int i = 0; i < 2; i++)
-            {
                 matches.Add(CreateMatch(tournament.Id, tbdPlayer.Id, tbdPlayer.Id, surface.Id, 3, i + 1));
-            }
 
             matches.Add(CreateMatch(tournament.Id, tbdPlayer.Id, tbdPlayer.Id, surface.Id, 4, 1));
 
@@ -285,9 +324,7 @@ namespace Tennis_Card_Game.Services
             TimeSpan interval = new TimeSpan(tournamentDuration.Ticks / (totalMatches + 1));
 
             for (int i = 0; i < totalMatches; i++)
-            {
                 matches[i].StartTime = startDateTime.Add(interval * (i + 1));
-            }
 
             HashSet<int> playerIds = matches
                 .SelectMany(m => new[] { m.Player1Id, m.Player2Id })
@@ -295,8 +332,7 @@ namespace Tennis_Card_Game.Services
                 .ToHashSet();
 
             int existingPlayerCount = await _context.Players
-                .Where(p => playerIds.Contains(p.Id))
-                .CountAsync();
+                .CountAsync(p => playerIds.Contains(p.Id));
 
             if (existingPlayerCount != playerIds.Count)
                 throw new InvalidOperationException("One or more players not found in database");
@@ -305,9 +341,8 @@ namespace Tennis_Card_Game.Services
             await _context.SaveChangesAsync();
         }
 
-        private Match CreateMatch(int tournamentId, int player1Id, int player2Id, int surfaceId, int round, int matchOrder)
-        {
-            return new Match
+        private Match CreateMatch(int tournamentId, int player1Id, int player2Id, int surfaceId, int round, int matchOrder) =>
+            new Match
             {
                 TournamentId = tournamentId,
                 Player1Id = player1Id,
@@ -319,7 +354,6 @@ namespace Tennis_Card_Game.Services
                 Player1Sets = 0,
                 Player2Sets = 0
             };
-        }
 
         public async Task EnsureMatchesCompletedAsync(int tournamentId)
         {
@@ -376,9 +410,8 @@ namespace Tennis_Card_Game.Services
             }
         }
 
-        private static TournamentViewModel MapToTournamentViewModel(Tournament tournament)
-        {
-            return new TournamentViewModel
+        private static TournamentViewModel MapToTournamentViewModel(Tournament tournament) =>
+            new TournamentViewModel
             {
                 Id = tournament.Id,
                 Name = tournament.Name,
@@ -400,6 +433,5 @@ namespace Tennis_Card_Game.Services
                     StartTime = m.StartTime
                 }).ToList()
             };
-        }
     }
 }
