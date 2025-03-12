@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tennis_Card_Game.Data;
+using Tennis_Card_Game.Interfaces;
 using Tennis_Card_Game.Models;
 using Tennis_Card_Game.ViewModel;
 
@@ -9,10 +10,12 @@ namespace Tennis_Card_Game.Controllers
     public class CardsController : Controller
     {
         private readonly Tennis_Card_GameContext _context;
+        private readonly ICardService _cardService;
 
-        public CardsController(Tennis_Card_GameContext context)
+        public CardsController(Tennis_Card_GameContext context, ICardService cardService)
         {
             _context = context;
+            _cardService = cardService;
         }
 
         public async Task<IActionResult> Browse(string? name = null, string? subCategory = null, string? surface = null)
@@ -31,16 +34,8 @@ namespace Tennis_Card_Game.Controllers
                 query = query.Where(c => c.CardCategory.SubCategory.Equals(subCategory, StringComparison.OrdinalIgnoreCase));
             }
 
-            List<string> categories = await _context.CardCategories
-                .Select(c => c.Name)
-                .Distinct()
-                .ToListAsync() ?? new List<string>();
-
-            List<string> subcategories = await _context.CardCategories
-                .Select(c => c.SubCategory)
-                .Distinct()
-                .ToListAsync() ?? new List<string>();
-
+            List<string> categories = await _cardService.GetAllCategoriesAsync();
+            List<string> subcategories = await _cardService.GetAllSubCategoriesAsync();
             List<Surface> surfaces = await _context.Surfaces.ToListAsync() ?? new List<Surface>();
 
             BrowseCardsVM model = new BrowseCardsVM
@@ -64,13 +59,7 @@ namespace Tennis_Card_Game.Controllers
                 return NotFound();
             }
 
-            Card? card = await _context.Cards
-                .Include(c => c.CardCategory)
-                .Include(c => c.SynergiesAsCard1)
-                    .ThenInclude(s => s.Card2)
-                .Include(c => c.SynergiesAsCard2)
-                    .ThenInclude(s => s.Card1)
-                .FirstOrDefaultAsync(m => m.Id == id);
+            Card? card = await _cardService.GetCardWithSynergiesAsync(id.Value);
 
             if (card == null)
             {
@@ -84,7 +73,7 @@ namespace Tennis_Card_Game.Controllers
         {
             if (!Id.HasValue)
             {
-                return RedirectToAction("Index", "Players");
+                return RedirectToAction("Index", "Player");
             }
             try
             {
@@ -103,13 +92,7 @@ namespace Tennis_Card_Game.Controllers
                 Dictionary<string, List<Card>> cardsGroupedByCategory;
                 if (!isRestrictedPlayer)
                 {
-                    cardsGroupedByCategory = await _context.Cards
-                        .Include(c => c.CardCategory)
-                        .GroupBy(c => c.CardCategory.Name)
-                        .ToDictionaryAsync(
-                            g => g.Key,
-                            g => g.ToList()
-                        );
+                    cardsGroupedByCategory = await _cardService.GetCardsGroupedByCategoryAsync();
                 }
                 else
                 {
@@ -149,7 +132,7 @@ namespace Tennis_Card_Game.Controllers
         {
             if (model.PlayerId <= 0)
             {
-                return RedirectToAction("Index", "Players");
+                return RedirectToAction("Index", "Player");
             }
 
             try
@@ -163,11 +146,11 @@ namespace Tennis_Card_Game.Controllers
                 {
                     return NotFound();
                 }
-                        
+
                 if (player.Id >= 66 && player.Id <= 97)
                 {
                     TempData["Error"] = "Players must bring their own deck and cannot modify it here.";
-                    return RedirectToAction("PlayerDetails", "Players", new { id = player.Id });
+                    return RedirectToAction("PlayerDetails", "Player", new { id = player.Id });
                 }
 
                 foreach (PlayerCard playerCard in player.PlayerCards)
@@ -212,7 +195,7 @@ namespace Tennis_Card_Game.Controllers
 
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Deck saved successfully!";
-                return RedirectToAction("PlayerDetails", "Players", new { id = player.Id });
+                return RedirectToAction("PlayerDetails", "Player", new { id = player.Id });
             }
             catch (System.Exception ex)
             {

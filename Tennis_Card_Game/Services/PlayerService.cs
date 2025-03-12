@@ -169,50 +169,6 @@ namespace Tennis_Card_Game.Services
             return Math.Min(100, (double)(player.Experience - currentLevelXp) / (nextLevelXp - currentLevelXp) * 100);
         }
 
-        public int CalculateBonusXp(Player player, int baseXp)
-        {
-            double multiplier = 1.0;
-
-            multiplier += player.PlayingStyle.Name switch
-            {
-                "Aggressive Baseliner" => 0.2,
-                "Serve and Volleyer" => 0.15,
-                "Defensive Baseliner" => 0.1,
-                "Counter-Puncher" => 0.25,
-                "Big Server" => 0.18,
-                _ => 0.12
-            };
-
-            if (player.SpecialAbility != null)
-            {
-                multiplier += player.SpecialAbility.Name switch
-                {
-                    "Second Wind" => 0.1,
-                    "Focus Mode" => 0.15,
-                    "Power Surge" => 0.2,
-                    "Card Draw" => 0.12,
-                    _ => 0.05
-                };
-            }
-            else
-            {
-                multiplier += 0.05;
-            }
-
-            return (int)(baseXp * multiplier);
-        }
-
-        public int CalculateTournamentXpBonus(Tournament tournament, bool isWinner)
-        {
-            int baseBonus = tournament.Level switch
-            {
-                "Grand Slam" => 1000,
-                "Masters" => 500,
-                "Regular" => 250,
-                _ => 100
-            };
-
-            return isWinner ? baseBonus * 2 : baseBonus;
-        }
+        
     }
 }
