@@ -222,12 +222,12 @@
                             @foreach (Match match in Model.RecentMatches)
                             {
                                 bool isPlayer1 = match.Player1Id == Model.Player.Id;
-                                bool isWinner = match.IsCompleted && match.WinnerId == Model.Player.Id;
+                                bool isWinner = match.IsCompleted &&
+                                ((isPlayer1 && match.Player1Sets > match.Player2Sets) ||
+                                (!isPlayer1 && match.Player2Sets > match.Player1Sets));
 
                                 int opponentId = isPlayer1 ? match.Player2Id : match.Player1Id;
-
                                 string opponentName = "Unknown Player";
-
                                 if (isPlayer1 && match.Player2 != null)
                                 {
                                     opponentName = match.Player2.Name;
@@ -240,11 +240,9 @@
                                 {
                                     opponentName = $"Player {opponentId}";
                                 }
-
                                 string statusClass = isWinner ? "list-group-item-success" : (match.IsCompleted ? "list-group-item-danger" : "list-group-item-warning");
                                 string badgeClass = isWinner ? "bg-success" : (match.IsCompleted ? "bg-danger" : "bg-warning");
                                 string statusText = match.IsCompleted ? (isWinner ? "Won" : "Lost") : "In Progress";
-
                                 <div class="list-group-item @statusClass">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
@@ -272,13 +270,6 @@
                                     </div>
                                 </div>
                             }
-                        }
-                        else
-                        {
-                            <div class="text-center py-4">
-                                <p class="text-muted">No recent matches</p>
-                                <a href="#" class="btn btn-outline-primary">Play a Match</a>
-                            </div>
                         }
                     </div>
                 </div>

@@ -169,11 +169,11 @@ namespace Tennis_Card_Game.Controllers
                 .Where(pc => pc.InDeck)
                 .ToList();
 
-            int wins = player.MatchesAsPlayer1.Count(m => m.WinnerId == player.Id) +
-                       player.MatchesAsPlayer2.Count(m => m.WinnerId == player.Id);
+            int wins = player.MatchesAsPlayer1.Count(m => m.Player1Sets > m.Player2Sets) +
+                       player.MatchesAsPlayer2.Count(m => m.Player2Sets > m.Player1Sets);
 
-            int losses = player.MatchesAsPlayer1.Count(m => m.WinnerId != player.Id && m.WinnerId != null) +
-                         player.MatchesAsPlayer2.Count(m => m.WinnerId != player.Id && m.WinnerId != null);
+            int losses = player.MatchesAsPlayer1.Count(m => m.Player1Sets < m.Player2Sets && m.IsCompleted) +
+                         player.MatchesAsPlayer2.Count(m => m.Player2Sets < m.Player1Sets && m.IsCompleted);
 
             List<Card> recommendedCards = await _context.Cards
                 .AsNoTracking()

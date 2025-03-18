@@ -201,7 +201,12 @@
                         <tbody>
                             @foreach (Match match in Model.RecentMatches)
                             {
-                                Player winner = match.WinnerId == match.Player1Id ? match.Player1 : match.Player2;
+                                string winnerName = "In Progress";
+                                if (match.IsCompleted)
+                                {
+                                    Player? winner = match.Player1Sets > match.Player2Sets ? match.Player1 : match.Player2;
+                                    winnerName = winner.Name;
+                                }
 
                                 <tr>
                                     <td>@match.EndTime?.ToString("dd MMM yyyy")</td>
@@ -209,7 +214,7 @@
                                     <td>@match.Player1.Name vs @match.Player2.Name</td>
                                     <td>@match.Surface.Name</td>
                                     <td>@match.Player1Sets - @match.Player2Sets</td>
-                                    <td>@winner.Name</td>
+                                    <td>@winnerName</td>
                                 </tr>
                             }
                         </tbody>

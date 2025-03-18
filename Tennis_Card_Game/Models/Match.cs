@@ -26,7 +26,6 @@ namespace Tennis_Card_Game.Models
         public int Player1Sets { get; set; }
         public int Player2Sets { get; set; }
         public bool IsCompleted { get; set; }
-        public int? WinnerId { get; set; }
         public int Round { get; set; } 
         public int MatchOrder { get; set; } 
         public virtual ICollection<Set> Sets { get; set; }
@@ -52,5 +51,7 @@ namespace Tennis_Card_Game.Models
             this.Surface = surface;
             this.SurfaceId = surface.Id;
         }
+
+
     }
 }

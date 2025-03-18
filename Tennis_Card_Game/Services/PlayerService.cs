@@ -18,14 +18,6 @@ namespace Tennis_Card_Game.Services
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public int CalculatePlayerWins(Player player) =>
-            player.MatchesAsPlayer1.Count(m => m.IsCompleted && m.WinnerId == player.Id) +
-            player.MatchesAsPlayer2.Count(m => m.IsCompleted && m.WinnerId == player.Id);
-
-        public int CalculatePlayerLosses(Player player) =>
-            player.MatchesAsPlayer1.Count(m => m.IsCompleted && m.WinnerId != null && m.WinnerId != player.Id) +
-            player.MatchesAsPlayer2.Count(m => m.IsCompleted && m.WinnerId != null && m.WinnerId != player.Id);
-
         public async Task<int> EnsureValidPlayerId(int id)
         {
             if (id == 0)
