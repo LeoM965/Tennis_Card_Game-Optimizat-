@@ -15,16 +15,13 @@ namespace Tennis_Card_Game.Controllers
     {
         private readonly Tennis_Card_GameContext _context;
         private readonly ITournamentService _tournamentService;
-        private readonly IMatchService _matchService;
 
         public TournamentsController(
             Tennis_Card_GameContext context,
-            ITournamentService tournamentService,
-            IMatchService matchService)
+            ITournamentService tournamentService)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _tournamentService = tournamentService ?? throw new ArgumentNullException(nameof(tournamentService));
-            _matchService = matchService ?? throw new ArgumentNullException(nameof(matchService));
         }
 
         public async Task<IActionResult> Index()
@@ -153,30 +150,5 @@ namespace Tennis_Card_Game.Controllers
             }
         }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> CompleteMatch(int id, int player1Sets, int player2Sets)
-        {
-            try
-            {
-                var result = await _matchService.CompleteMatchAsync(id, player1Sets, player2Sets);
-
-                if (result.Success)
-                {
-                    TempData["Success"] = "Match completed successfully.";
-                    return RedirectToAction(nameof(Details), new { id = result.TournamentId });
-                }
-                else
-                {
-                    TempData["Error"] = result.ErrorMessage;
-                    return RedirectToAction(nameof(Index));
-                }
-            }
-            catch (Exception ex)
-            {
-                TempData["Error"] = "An error occurred while completing the match.";
-                return RedirectToAction(nameof(Index));
-            }
-        }
     }
 }
