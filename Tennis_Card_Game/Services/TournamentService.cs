@@ -1,9 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Tennis_Card_Game.Data;
 using Tennis_Card_Game.Interfaces;
 using Tennis_Card_Game.Models;
@@ -15,20 +10,17 @@ namespace Tennis_Card_Game.Services
     {
         private readonly Tennis_Card_GameContext _context;
         private readonly ILogger<TournamentService> _logger;
-        private readonly IMatchService _matchService;
         private readonly ITournamentMatchesGenerator _matchesGenerator;
         private readonly ITournamentEligibilityChecker _eligibilityChecker;
 
         public TournamentService(
             Tennis_Card_GameContext context,
             ILogger<TournamentService> logger,
-            IMatchService matchService,
             ITournamentMatchesGenerator matchesGenerator,
             ITournamentEligibilityChecker eligibilityChecker)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _matchService = matchService ?? throw new ArgumentNullException(nameof(matchService));
             _matchesGenerator = matchesGenerator ?? throw new ArgumentNullException(nameof(matchesGenerator));
             _eligibilityChecker = eligibilityChecker ?? throw new ArgumentNullException(nameof(eligibilityChecker));
         }
@@ -171,59 +163,6 @@ namespace Tennis_Card_Game.Services
             }
         }
 
-        public async Task EnsureMatchesCompletedAsync(int tournamentId)
-        {
-            Tournament? tournament = await _context.Tournaments
-                .Include(t => t.Matches)
-                    .ThenInclude(m => m.Player1)
-                .Include(t => t.Matches)
-                    .ThenInclude(m => m.Player2)
-                .FirstOrDefaultAsync(t => t.Id == tournamentId);
-
-            if (tournament == null)
-                return;
-
-            DateTime currentTime = DateTime.Now;
-            DateTime tournamentEndDateTime = DateTime.Today.Add(tournament.EndTime);
-
-            if (currentTime >= tournamentEndDateTime.AddMinutes(-10))
-            {
-                List<Match> incompleteMatches = tournament.Matches
-                    .Where(m => !m.IsCompleted)
-                    .OrderBy(m => m.Round)
-                    .ThenBy(m => m.MatchOrder)
-                    .ToList();
-
-                if (incompleteMatches.Count == 0)
-                    return;
-
-                var random = new Random();
-
-                foreach (Match match in incompleteMatches)
-                {
-                    bool player1Wins = random.Next(2) == 0;
-
-                    if (player1Wins)
-                    {
-                        match.Player1Sets = random.Next(2, 4);
-                        match.Player2Sets = random.Next(0, match.Player1Sets);
-                    }
-                    else
-                    {
-                        match.Player2Sets = random.Next(2, 4);
-                        match.Player1Sets = random.Next(0, match.Player2Sets);
-                    }
-
-                    match.IsCompleted = true;
-                    match.EndTime = currentTime;
-
-                    await _matchService.UpdateNextRoundMatchAsync(match);
-                }
-
-                await _context.SaveChangesAsync();
-                _logger.LogInformation("Auto-completed {MatchCount} matches for tournament {TournamentId}",
-                    incompleteMatches.Count, tournamentId);
-            }
-        }
+        
     }
 }

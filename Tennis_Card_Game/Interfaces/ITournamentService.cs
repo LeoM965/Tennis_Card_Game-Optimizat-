@@ -10,6 +10,5 @@ namespace Tennis_Card_Game.Services
         Task<List<TournamentViewModel>> GetCurrentTournamentsAsync();
         Task<(bool isEligible, string errorMessage, Player? player, Tournament? tournament)> CheckTournamentEligibilityAsync(int tournamentId, string? userId);
         Task<(bool Success, string ErrorMessage)> JoinTournamentAsync(int tournamentId, string userId);
-        Task EnsureMatchesCompletedAsync(int tournamentId);
     }
 }

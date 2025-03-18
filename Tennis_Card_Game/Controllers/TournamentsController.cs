@@ -48,8 +48,6 @@ namespace Tennis_Card_Game.Controllers
 
             try
             {
-                await _tournamentService.EnsureMatchesCompletedAsync(id.Value);
-
                 var tournament = await _tournamentService.GetTournamentDetailsAsync(id.Value);
 
                 if (tournament == null)

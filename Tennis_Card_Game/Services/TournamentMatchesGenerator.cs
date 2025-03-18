@@ -41,21 +41,17 @@ public class TournamentMatchesGenerator : ITournamentMatchesGenerator
     {
         int registeredPlayersCount = await _context.TournamentRegistrations
             .CountAsync(r => r.TournamentId == tournament.Id);
-
         int aiPlayersNeeded = Math.Max(0, 16 - registeredPlayersCount);
-
         List<Player> aiOpponents = await _context.Players
             .Where(p => p.UserId == null)
             .Include(p => p.PlayingStyle)
             .OrderBy(p => Guid.NewGuid())
             .Take(aiPlayersNeeded)
             .ToListAsync();
-
         if (aiOpponents.Count < aiPlayersNeeded)
             throw new InvalidOperationException($"There are not enough AI players in the database. Need {aiPlayersNeeded} but only found {aiOpponents.Count}");
 
         Player? tbdPlayer = await _context.Players.FirstOrDefaultAsync(p => p.Name == "Player");
-
         if (tbdPlayer == null)
         {
             tbdPlayer = new Player
@@ -69,7 +65,6 @@ public class TournamentMatchesGenerator : ITournamentMatchesGenerator
         }
 
         var matches = new List<Match>();
-
         DateTime startDateTime = DateTime.Today.Add(tournament.StartTime);
         DateTime endDateTime = tournament.EndTime.TotalHours == 0
             ? DateTime.Today.AddDays(1)
@@ -83,14 +78,12 @@ public class TournamentMatchesGenerator : ITournamentMatchesGenerator
 
         List<Player> allPlayers = new List<Player>(registeredPlayers);
         allPlayers.AddRange(aiOpponents);
-
         var shuffledPlayers = allPlayers.OrderBy(p => Guid.NewGuid()).ToList();
 
         for (int i = 0; i < 8; i++)
         {
             int player1Index = i * 2;
             int player2Index = i * 2 + 1;
-
             if (player2Index < shuffledPlayers.Count)
             {
                 matches.Add(CreateMatch(
@@ -113,10 +106,19 @@ public class TournamentMatchesGenerator : ITournamentMatchesGenerator
         matches.Add(CreateMatch(tournament.Id, tbdPlayer.Id, tbdPlayer.Id, surface.Id, 4, 1));
 
         int totalMatches = matches.Count;
-        TimeSpan interval = new TimeSpan(tournamentDuration.Ticks / (totalMatches + 1));
+
+        TimeSpan matchDuration = new TimeSpan(tournamentDuration.Ticks / totalMatches);
 
         for (int i = 0; i < totalMatches; i++)
-            matches[i].StartTime = startDateTime.Add(interval * (i + 1));
+        {
+            DateTime currentMatchStart = startDateTime.Add(new TimeSpan(matchDuration.Ticks * i));
+            DateTime currentMatchEnd = i < totalMatches - 1
+                ? startDateTime.Add(new TimeSpan(matchDuration.Ticks * (i + 1)))
+                : endDateTime;
+
+            matches[i].StartTime = currentMatchStart;
+            matches[i].EndTime = currentMatchEnd;
+        }
 
         HashSet<int> playerIds = matches
             .SelectMany(m => new[] { m.Player1Id, m.Player2Id })
