@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tennis_Card_Game.Data;
 using Tennis_Card_Game.Interfaces;
@@ -55,16 +55,20 @@ namespace Tennis_Card_Game.Controllers
 
         public async Task<IActionResult> GameDashboard()
         {
-            List<Player> topPlayers = await _context.Players
+            var model = new GameDashboardViewModel();
+
+            var topPlayersQuery = _context.Players
                 .Include(p => p.PlayingStyle)
+                .Where(p => p.PlayingStyle != null)
                 .OrderByDescending(p => p.Level)
                 .ThenByDescending(p => p.Experience)
                 .Take(5)
-                .ToListAsync();
+                .AsNoTracking();
 
-            List<CardStatistic> popularCards = await _context.PlayedCards
+            var popularCardsQuery = _context.PlayedCards
                 .Include(pc => pc.Card)
                 .ThenInclude(c => c.CardCategory)
+                .Where(pc => pc.Card != null && pc.Card.CardCategory != null)
                 .GroupBy(pc => new { pc.Card.Id, pc.Card.Name, CategoryName = pc.Card.CardCategory.Name })
                 .Select(g => new CardStatistic
                 {
@@ -75,12 +79,12 @@ namespace Tennis_Card_Game.Controllers
                 })
                 .OrderByDescending(c => c.UsageCount)
                 .Take(5)
-                .ToListAsync();
+                .AsNoTracking();
 
-            List<SurfaceStatistic> surfaceStats = await _context.Matches
+            var surfaceStatsQuery = _context.Matches
                 .Include(m => m.Surface)
                 .Include(m => m.Sets)
-                .Where(m => m.IsCompleted)
+                .Where(m => m.IsCompleted && m.Surface != null)
                 .GroupBy(m => new { m.Surface.Id, m.Surface.Name })
                 .Select(g => new SurfaceStatistic
                 {
@@ -88,22 +92,28 @@ namespace Tennis_Card_Game.Controllers
                     SurfaceName = g.Key.Name,
                     MatchCount = g.Count(),
                     AverageGamesPerSet = g.SelectMany(m => m.Sets)
-                                           .Average(s => s.Player1Games + s.Player2Games)
+                        .DefaultIfEmpty()
+                        .Average(s => s != null ? s.Player1Games + s.Player2Games : 0)
                 })
-                .ToListAsync();
+                .AsNoTracking();
 
-            List<Match> recentMatches = await _context.Matches
+            var recentMatchesQuery = _context.Matches
                 .Include(m => m.Player1)
                 .Include(m => m.Player2)
                 .Include(m => m.Tournament)
                 .Include(m => m.Surface)
-                .Where(m => m.IsCompleted)
+                .Where(m => m.IsCompleted &&
+                       m.Player1 != null &&
+                       m.Player2 != null &&
+                       m.Tournament != null &&
+                       m.Surface != null)
                 .OrderByDescending(m => m.EndTime)
                 .Take(10)
-                .ToListAsync();
+                .AsNoTracking();
 
-            List<PlayingStyleDistribution> styleDistribution = await _context.Players
+            var styleDistributionQuery = _context.Players
                 .Include(p => p.PlayingStyle)
+                .Where(p => p.PlayingStyle != null)
                 .GroupBy(p => new { p.PlayingStyle.Id, p.PlayingStyle.Name })
                 .Select(g => new PlayingStyleDistribution
                 {
@@ -111,23 +121,27 @@ namespace Tennis_Card_Game.Controllers
                     StyleName = g.Key.Name,
                     PlayerCount = g.Count()
                 })
-                .ToListAsync();
+                .AsNoTracking();
 
-            GameDashboardViewModel model = new GameDashboardViewModel
+            var countQuery = new
             {
-                TopPlayers = topPlayers,
-                PopularCards = popularCards,
-                SurfaceStatistics = surfaceStats,
-                RecentMatches = recentMatches,
-                StyleDistribution = styleDistribution,
-                TotalPlayers = await _context.Players.CountAsync(),
-                TotalCards = await _context.Cards.CountAsync(),
-                TotalMatches = await _context.Matches.CountAsync()
+                TotalPlayers = _context.Players.AsNoTracking().CountAsync(),
+                TotalCards = _context.Cards.AsNoTracking().CountAsync(),
+                TotalMatches = _context.Matches.AsNoTracking().CountAsync()
             };
+
+            model.TopPlayers = await topPlayersQuery.ToListAsync();
+            model.PopularCards = await popularCardsQuery.ToListAsync();
+            model.SurfaceStatistics = await surfaceStatsQuery.ToListAsync();
+            model.RecentMatches = await recentMatchesQuery.ToListAsync();
+            model.StyleDistribution = await styleDistributionQuery.ToListAsync();
+
+            model.TotalPlayers = await countQuery.TotalPlayers;
+            model.TotalCards = await countQuery.TotalCards;
+            model.TotalMatches = await countQuery.TotalMatches;
 
             return View(model);
         }
-
         public IActionResult Search(string query, string type = "all")
         {
             if (string.IsNullOrWhiteSpace(query))
