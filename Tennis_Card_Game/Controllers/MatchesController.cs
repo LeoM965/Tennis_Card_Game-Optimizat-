@@ -1,21 +1,22 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tennis_Card_Game.Data;
+using Tennis_Card_Game.Services;
 
 namespace Tennis_Card_Game.Controllers
 {
     public class MatchesController : Controller
     {
-        private readonly Tennis_Card_GameContext _context;
+        private readonly IMatchService _matchService;
 
-        public MatchesController(Tennis_Card_GameContext context)
+        public MatchesController(IMatchService matchService)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _matchService = matchService ?? throw new ArgumentNullException( nameof(matchService));
         }
 
         public async Task<IActionResult> Index()
         {
-            var matches = await GetMatchesQuery()
+            var matches = await _matchService.GetMatchesQuery()
                 .OrderByDescending(m => m.StartTime)
                 .ToListAsync();
 
@@ -29,7 +30,7 @@ namespace Tennis_Card_Game.Controllers
                 return NotFound();
             }
 
-            var match = await GetMatchesQuery()
+            var match = await _matchService.GetMatchesQuery()
                 .Include(m => m.Sets)
                     .ThenInclude(s => s.Games)
                         .ThenInclude(g => g.Points)
@@ -42,17 +43,9 @@ namespace Tennis_Card_Game.Controllers
                 return NotFound();
             }
 
-            return View(match);
-        }
+            ViewBag.Score = await _matchService.GetMatchScore(id.Value);
 
-        protected IQueryable<Models.Match> GetMatchesQuery()
-        {
-            return _context.Matches
-                .Include(m => m.Player1)
-                .Include(m => m.Player2)
-                .Include(m => m.Surface)
-                .Include(m => m.Tournament)
-                .Include(m => m.WeatherCondition);
+            return View(match);
         }
     }
 }

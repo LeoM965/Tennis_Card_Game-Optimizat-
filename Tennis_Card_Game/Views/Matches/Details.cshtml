@@ -24,6 +24,16 @@
             margin: 20px 0;
         }
 
+        .match-winner {
+            font-size: 20px;
+            color: #006400;
+            margin: 15px 0;
+            padding: 10px;
+            background-color: #f0fff0;
+            border-radius: 5px;
+            border: 1px solid #98FB98;
+        }
+
         .set-details {
             margin-bottom: 15px;
             border: 1px solid #ddd;
@@ -73,6 +83,20 @@
             {
                 <p><strong>End Time:</strong> @Model.EndTime.Value.ToString("yyyy-MM-dd HH:mm")</p>
                 <p><strong>Duration:</strong> @((Model.EndTime.Value - Model.StartTime).ToString(@"hh\:mm\:ss"))</p>
+
+                @if (ViewBag.MatchWinner != null)
+                {
+                    <div class="match-winner">
+                        @if (ViewBag.MatchWinner == "Tie")
+                        {
+                            <p><strong>Match Result:</strong> Tie with score @ViewBag.FinalScore</p>
+                        }
+                        else
+                        {
+                            <p><strong>Winner:</strong> @ViewBag.MatchWinner with score @ViewBag.FinalScore</p>
+                        }
+                    </div>
+                }
             }
         </div>
 

@@ -2,18 +2,18 @@
 using Tennis_Card_Game.Data;
 using Tennis_Card_Game.Interfaces;
 using Tennis_Card_Game.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 public class TournamentMatchesGenerator : ITournamentMatchesGenerator
 {
     private readonly Tennis_Card_GameContext _context;
-    private readonly ILogger<TournamentMatchesGenerator> _logger;
 
-    public TournamentMatchesGenerator(
-        Tennis_Card_GameContext context,
-        ILogger<TournamentMatchesGenerator> logger)
+    public TournamentMatchesGenerator(Tennis_Card_GameContext context)
     {
         _context = context ?? throw new ArgumentNullException(nameof(context));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task AddPlayerToTournamentAsync(Tournament tournament, Player player, Surface surface)
@@ -132,6 +132,36 @@ public class TournamentMatchesGenerator : ITournamentMatchesGenerator
             throw new InvalidOperationException("One or more players not found in database");
 
         await _context.Matches.AddRangeAsync(matches);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UpdateNextRoundMatchesAsync(int tournamentId)
+    {
+        var completedMatches = await _context.Matches
+            .Where(m => m.TournamentId == tournamentId && m.IsCompleted && m.Round < 4)
+            .ToListAsync();
+
+        foreach (var match in completedMatches)
+        {
+            int nextRound = match.Round + 1;
+            int matchOrder = (match.MatchOrder + 1) / 2;
+
+            var nextRoundMatch = await _context.Matches
+                .FirstOrDefaultAsync(m => m.TournamentId == tournamentId && m.Round == nextRound && m.MatchOrder == matchOrder);
+
+            if (nextRoundMatch != null)
+            {
+                int winnerId = match.Player1Sets > match.Player2Sets ? match.Player1Id : match.Player2Id;
+
+                if (match.MatchOrder % 2 == 1)
+                    nextRoundMatch.Player1Id = winnerId;
+                else
+                    nextRoundMatch.Player2Id = winnerId;
+
+                _context.Matches.Update(nextRoundMatch);
+            }
+        }
+
         await _context.SaveChangesAsync();
     }
 

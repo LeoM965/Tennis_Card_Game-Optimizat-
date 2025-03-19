@@ -6,6 +6,8 @@ namespace Tennis_Card_Game.Interfaces
     {
         Task AddPlayerToTournamentAsync(Tournament tournament, Player player, Surface surface);
         Task GenerateTournamentMatchesAsync(Tournament tournament, Player firstPlayer, Surface surface);
+
+        Task UpdateNextRoundMatchesAsync(int tournamentId);
     }
 
 }

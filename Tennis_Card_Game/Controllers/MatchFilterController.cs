@@ -1,16 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tennis_Card_Game.Data;
+using Tennis_Card_Game.Services;
 
 namespace Tennis_Card_Game.Controllers
 {
-    public class MatchFilterController : MatchesController
+    public class MatchFilterController : Controller
     {
         private readonly Tennis_Card_GameContext _context;
+        private readonly IMatchService _matchService;
 
-        public MatchFilterController(Tennis_Card_GameContext context) : base(context)
+        public MatchFilterController(Tennis_Card_GameContext context, IMatchService matchService)
         {
             _context = context;
+            _matchService = matchService;
         }
 
         public async Task<IActionResult> MatchesByTournament(int tournamentId)
@@ -24,7 +27,7 @@ namespace Tennis_Card_Game.Controllers
                 return NotFound();
             }
 
-            var matches = await GetMatchesQuery()
+            var matches = await _matchService.GetMatchesQuery()
                 .Where(m => m.TournamentId == tournamentId)
                 .OrderBy(m => m.StartTime)
                 .ToListAsync();
@@ -46,7 +49,7 @@ namespace Tennis_Card_Game.Controllers
                 return NotFound();
             }
 
-            var matches = await GetMatchesQuery()
+            var matches = await _matchService.GetMatchesQuery()
                 .Where(m => m.Player1Id == playerId || m.Player2Id == playerId)
                 .OrderByDescending(m => m.StartTime)
                 .ToListAsync();
@@ -76,7 +79,7 @@ namespace Tennis_Card_Game.Controllers
                 return NotFound();
             }
 
-            var matches = await GetMatchesQuery()
+            var matches = await _matchService.GetMatchesQuery()
                 .Where(m => m.SurfaceId == surfaceId)
                 .OrderByDescending(m => m.StartTime)
                 .ToListAsync();
@@ -96,7 +99,7 @@ namespace Tennis_Card_Game.Controllers
                 return NotFound();
             }
 
-            var matches = await GetMatchesQuery()
+            var matches = await _matchService.GetMatchesQuery()
                 .Where(m => m.WeatherConditionId == weatherId)
                 .OrderByDescending(m => m.StartTime)
                 .ToListAsync();

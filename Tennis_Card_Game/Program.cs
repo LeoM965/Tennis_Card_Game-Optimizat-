@@ -22,6 +22,9 @@ builder.Services.AddScoped<PlayerService>();
 builder.Services.AddScoped<ITournamentService,TournamentService>();
 builder.Services.AddScoped<ITournamentEligibilityChecker, TournamentEligibilityChecker>();
 builder.Services.AddScoped<ITournamentMatchesGenerator, TournamentMatchesGenerator>();
+builder.Services.AddScoped<IMatchService, MatchService>();
+builder.Services.AddHostedService<MatchCompletionService>();
+
 
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<Tennis_Card_GameContext>()

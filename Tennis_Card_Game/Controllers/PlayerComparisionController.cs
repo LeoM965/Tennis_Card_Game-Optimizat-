@@ -1,16 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tennis_Card_Game.Data;
+using Tennis_Card_Game.Services;
 
 namespace Tennis_Card_Game.Controllers
 {
-    public class PlayerComparisonController : MatchesController
+    public class PlayerComparisonController : Controller
     {
         private readonly Tennis_Card_GameContext _context;
+        private readonly IMatchService _matchService;
 
-        public PlayerComparisonController(Tennis_Card_GameContext context) : base(context)
+        public PlayerComparisonController(Tennis_Card_GameContext context , IMatchService matchService) 
         {
             _context = context;
+            _matchService = matchService;
         }
 
         public async Task<IActionResult> HeadToHead(int player1Id, int player2Id)
@@ -23,7 +26,7 @@ namespace Tennis_Card_Game.Controllers
                 return NotFound();
             }
 
-            var matches = await GetMatchesQuery()
+            var matches = await _matchService.GetMatchesQuery()
                 .Where(m =>
                     (m.Player1Id == player1Id && m.Player2Id == player2Id) ||
                     (m.Player1Id == player2Id && m.Player2Id == player1Id))

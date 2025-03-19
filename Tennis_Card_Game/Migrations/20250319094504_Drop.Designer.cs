@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tennis_Card_Game.Data;
 
@@ -11,9 +12,11 @@ using Tennis_Card_Game.Data;
 namespace Tennis_Card_Game.Migrations
 {
     [DbContext(typeof(Tennis_Card_GameContext))]
-    partial class Tennis_Card_GameContextModelSnapshot : ModelSnapshot
+    [Migration("20250319094504_Drop")]
+    partial class Drop
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -274,7 +277,7 @@ namespace Tennis_Card_Game.Migrations
 
                     b.HasIndex("CardCategoryId");
 
-                    b.ToTable("Cards", (string)null);
+                    b.ToTable("Cards");
                 });
 
             modelBuilder.Entity("Tennis_Card_Game.Models.CardCategory", b =>
@@ -297,7 +300,7 @@ namespace Tennis_Card_Game.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("CardCategories", (string)null);
+                    b.ToTable("CardCategories");
                 });
 
             modelBuilder.Entity("Tennis_Card_Game.Models.CardSynergy", b =>
@@ -328,7 +331,7 @@ namespace Tennis_Card_Game.Migrations
 
                     b.HasIndex("Card2Id");
 
-                    b.ToTable("CardSynergies", (string)null);
+                    b.ToTable("CardSynergies");
                 });
 
             modelBuilder.Entity("Tennis_Card_Game.Models.Game", b =>
@@ -366,7 +369,7 @@ namespace Tennis_Card_Game.Migrations
 
                     b.HasIndex("SetId");
 
-                    b.ToTable("Games", (string)null);
+                    b.ToTable("Games");
                 });
 
             modelBuilder.Entity("Tennis_Card_Game.Models.Match", b =>
@@ -425,7 +428,7 @@ namespace Tennis_Card_Game.Migrations
 
                     b.HasIndex("WeatherConditionId");
 
-                    b.ToTable("Matches", (string)null);
+                    b.ToTable("Matches");
                 });
 
             modelBuilder.Entity("Tennis_Card_Game.Models.PlayedCard", b =>
@@ -462,7 +465,7 @@ namespace Tennis_Card_Game.Migrations
 
                     b.HasIndex("PointId");
 
-                    b.ToTable("PlayedCards", (string)null);
+                    b.ToTable("PlayedCards");
                 });
 
             modelBuilder.Entity("Tennis_Card_Game.Models.Player", b =>
@@ -518,7 +521,7 @@ namespace Tennis_Card_Game.Migrations
                         .IsUnique()
                         .HasFilter("[UserId] IS NOT NULL");
 
-                    b.ToTable("Players", (string)null);
+                    b.ToTable("Players");
                 });
 
             modelBuilder.Entity("Tennis_Card_Game.Models.PlayerCard", b =>
@@ -547,7 +550,7 @@ namespace Tennis_Card_Game.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("PlayerCards", (string)null);
+                    b.ToTable("PlayerCards");
                 });
 
             modelBuilder.Entity("Tennis_Card_Game.Models.PlayingStyle", b =>
@@ -579,7 +582,7 @@ namespace Tennis_Card_Game.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("PlayingStyles", (string)null);
+                    b.ToTable("PlayingStyles");
                 });
 
             modelBuilder.Entity("Tennis_Card_Game.Models.Point", b =>
@@ -603,7 +606,7 @@ namespace Tennis_Card_Game.Migrations
 
                     b.HasIndex("GameId");
 
-                    b.ToTable("Points", (string)null);
+                    b.ToTable("Points");
                 });
 
             modelBuilder.Entity("Tennis_Card_Game.Models.Set", b =>
@@ -636,7 +639,7 @@ namespace Tennis_Card_Game.Migrations
 
                     b.HasIndex("MatchId");
 
-                    b.ToTable("Sets", (string)null);
+                    b.ToTable("Sets");
                 });
 
             modelBuilder.Entity("Tennis_Card_Game.Models.SpecialAbility", b =>
@@ -667,7 +670,7 @@ namespace Tennis_Card_Game.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("SpecialAbilities", (string)null);
+                    b.ToTable("SpecialAbilities");
                 });
 
             modelBuilder.Entity("Tennis_Card_Game.Models.Surface", b =>
@@ -690,7 +693,7 @@ namespace Tennis_Card_Game.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Surfaces", (string)null);
+                    b.ToTable("Surfaces");
                 });
 
             modelBuilder.Entity("Tennis_Card_Game.Models.Tournament", b =>
@@ -730,7 +733,7 @@ namespace Tennis_Card_Game.Migrations
 
                     b.HasIndex("SurfaceId");
 
-                    b.ToTable("Tournaments", (string)null);
+                    b.ToTable("Tournaments");
                 });
 
             modelBuilder.Entity("Tennis_Card_Game.Models.TournamentRegistration", b =>
@@ -756,7 +759,7 @@ namespace Tennis_Card_Game.Migrations
 
                     b.HasIndex("TournamentId");
 
-                    b.ToTable("TournamentRegistrations", (string)null);
+                    b.ToTable("TournamentRegistrations");
                 });
 
             modelBuilder.Entity("Tennis_Card_Game.Models.WeatherCondition", b =>
@@ -785,7 +788,7 @@ namespace Tennis_Card_Game.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("WeatherConditions", (string)null);
+                    b.ToTable("WeatherConditions");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>

@@ -1,20 +1,23 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Tennis_Card_Game.Data;
+using Tennis_Card_Game.Services;
 
 namespace Tennis_Card_Game.Controllers
 {
-    public class MatchListingController : MatchesController
+    public class MatchListingController : Controller
     {
-        public MatchListingController(Tennis_Card_GameContext context) : base(context)
+        private readonly IMatchService _matchService;
+        public MatchListingController(IMatchService matchService) 
         {
+            _matchService = matchService;
         }
 
         public async Task<IActionResult> LiveMatches()
         {
             var currentTime = DateTime.Now;
 
-            var liveMatches = await GetMatchesQuery()
+            var liveMatches = await _matchService.GetMatchesQuery()
                 .Where(m => !m.IsCompleted && m.StartTime <= currentTime)
                 .ToListAsync();
 
@@ -25,7 +28,7 @@ namespace Tennis_Card_Game.Controllers
         {
             var currentTime = DateTime.Now;
 
-            var upcomingMatches = await GetMatchesQuery()
+            var upcomingMatches = await _matchService.GetMatchesQuery()
                 .Where(m => !m.IsCompleted && m.StartTime > currentTime)
                 .OrderBy(m => m.StartTime)
                 .Take(10)
@@ -36,7 +39,7 @@ namespace Tennis_Card_Game.Controllers
 
         public async Task<IActionResult> CompletedMatches()
         {
-            var completedMatches = await GetMatchesQuery()
+            var completedMatches = await _matchService.GetMatchesQuery()
                 .Where(m => m.IsCompleted)
                 .OrderByDescending(m => m.StartTime)
                 .Take(20)
