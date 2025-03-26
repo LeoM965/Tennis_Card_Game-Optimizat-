@@ -23,7 +23,7 @@
                         <div class="xp-progress" style="width: @(Math.Round(Model.LevelProgressPercentage, 2))%"></div>
                     </div>
                     <div class="xp-progress-text">
-                        @(Model.CurrentLevelXpRequirement - Model.XpToNextLevel) / @Model.CurrentLevelXpRequirement XP
+                        @Model.Player.Experience / @Model.CurrentLevelXpRequirement XP
                         (Progress: @(Math.Round(Model.LevelProgressPercentage, 2))%)
                     </div>
                 </div>

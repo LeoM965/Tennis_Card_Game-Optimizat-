@@ -247,7 +247,7 @@ namespace Tennis_Card_Game.Controllers
             PlayerProgressionViewModel progressionViewModel = new PlayerProgressionViewModel
             {
                 Player = player,
-                CurrentLevelXpRequirement = _playerService.CalculateXpForNextLevel(player.Level),
+                CurrentLevelXpRequirement = _playerService.CalculateXpForLevel(player.Level + 1),
                 XpToNextLevel = _playerService.CalculateXpToNextLevel(player),
                 LevelProgressPercentage = _playerService.CalculateLevelProgressPercentage(player),
                 AvailableSkillPoints = _playerService.CalculateAvailableSkillPoints(player),
