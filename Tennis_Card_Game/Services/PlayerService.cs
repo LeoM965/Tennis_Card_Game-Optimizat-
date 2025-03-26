@@ -7,7 +7,7 @@ namespace Tennis_Card_Game.Services
     public class PlayerService
     {
         private const int BASE_XP_PER_LEVEL = 1000;
-        private const double XP_GROWTH_MULTIPLIER = 2.25;
+        private const double XP_GROWTH_MULTIPLIER = 2;
         private const int BASE_SKILL_POINTS = 1;
         private const int SKILL_POINTS_GROWTH_RATE = 2;
 

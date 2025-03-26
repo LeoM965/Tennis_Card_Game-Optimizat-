@@ -137,7 +137,6 @@ namespace Tennis_Card_Game.Controllers
             TempData["SuccessMessage"] = $"Player {player.Name} created successfully!";
             return RedirectToAction("PlayerDetails", new { id = player.Id });
         }
-
         [HttpGet]
         public async Task<IActionResult> PlayerDetails(int id)
         {
@@ -152,6 +151,10 @@ namespace Tennis_Card_Game.Controllers
                     .ThenInclude(m => m.Tournament)
                 .Include(p => p.MatchesAsPlayer2)
                     .ThenInclude(m => m.Tournament)
+                .Include(p => p.MatchesAsPlayer1)
+                    .ThenInclude(m => m.Player2) 
+                .Include(p => p.MatchesAsPlayer2)
+                    .ThenInclude(m => m.Player1) 
                 .FirstOrDefaultAsync(p => p.Id == id);
 
             if (player == null)
@@ -165,12 +168,8 @@ namespace Tennis_Card_Game.Controllers
                 .Take(5)
                 .ToList();
 
-            List<PlayerCard> playerCards = player.PlayerCards
-                .Where(pc => pc.InDeck)
-                .ToList();
-
-            int wins = player.MatchesAsPlayer1.Count(m => m.Player1Sets > m.Player2Sets) +
-                       player.MatchesAsPlayer2.Count(m => m.Player2Sets > m.Player1Sets);
+            int wins = player.MatchesAsPlayer1.Count(m => m.Player1Sets > m.Player2Sets && m.IsCompleted) +
+                       player.MatchesAsPlayer2.Count(m => m.Player2Sets > m.Player1Sets && m.IsCompleted);
 
             int losses = player.MatchesAsPlayer1.Count(m => m.Player1Sets < m.Player2Sets && m.IsCompleted) +
                          player.MatchesAsPlayer2.Count(m => m.Player2Sets < m.Player1Sets && m.IsCompleted);
@@ -185,7 +184,7 @@ namespace Tennis_Card_Game.Controllers
             var viewModel = new PlayerDetailsViewModel
             {
                 Player = player,
-                PlayerCards = playerCards,
+                PlayerCards = player.PlayerCards.Where(pc => pc.InDeck).ToList(),
                 RecentMatches = recentMatches,
                 Wins = wins,
                 Losses = losses,

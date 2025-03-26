@@ -226,7 +226,6 @@
                                 ((isPlayer1 && match.Player1Sets > match.Player2Sets) ||
                                 (!isPlayer1 && match.Player2Sets > match.Player1Sets));
 
-                                int opponentId = isPlayer1 ? match.Player2Id : match.Player1Id;
                                 string opponentName = "Unknown Player";
                                 if (isPlayer1 && match.Player2 != null)
                                 {
@@ -236,13 +235,11 @@
                                 {
                                     opponentName = match.Player1.Name;
                                 }
-                                else
-                                {
-                                    opponentName = $"Player {opponentId}";
-                                }
+
                                 string statusClass = isWinner ? "list-group-item-success" : (match.IsCompleted ? "list-group-item-danger" : "list-group-item-warning");
                                 string badgeClass = isWinner ? "bg-success" : (match.IsCompleted ? "bg-danger" : "bg-warning");
                                 string statusText = match.IsCompleted ? (isWinner ? "Won" : "Lost") : "In Progress";
+
                                 <div class="list-group-item @statusClass">
                                     <div class="d-flex justify-content-between align-items-center">
                                         <div>
@@ -263,14 +260,13 @@
                                         </div>
                                         <div class="text-center">
                                             <div class="match-score fw-bold">@match.Player1Sets - @match.Player2Sets</div>
-                                            <span class="badge @badgeClass">
-                                                @statusText
-                                            </span>
+                                            <span class="badge @badgeClass">@statusText</span>
                                         </div>
                                     </div>
                                 </div>
                             }
                         }
+                      
                     </div>
                 </div>
                 <div class="card-footer text-center">
